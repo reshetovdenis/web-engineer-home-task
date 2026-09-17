@@ -14,6 +14,7 @@ h1{font-family:Inter,Arial,sans-serif;font-size:35px;line-height:44px;font-weigh
 .chart .recharts-default-legend{font-family:Inter,Arial,sans-serif;font-size:12px;font-weight:400}
 .chart .recharts-legend-item-text{color:#14141399!important}
 .table-scroll{width:100%;overflow-x:auto}
+.month-control{display:none}
 table{border-collapse:collapse;table-layout:fixed;min-width:1408px;width:100%;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums}
 thead th{height:56px;font-size:14px;line-height:20px;font-weight:400;color:#14141399;text-align:right;border-bottom:1px solid #14141314;white-space:nowrap;padding:0}
 thead th:first-child{width:280px;position:sticky;left:0;z-index:2;background:#fff}
@@ -24,7 +25,7 @@ tbody th{position:sticky;left:0;z-index:1;width:280px;text-align:left;white-spac
 tbody td{width:92px;padding-left:16px;text-align:right;color:#141413}
 tbody td:last-child{width:116px;padding-right:24px}
 tbody tr:hover th,tbody tr:hover td{background:#faf9f5}
-.row-label{height:56px;display:flex;align-items:center;gap:8px;padding-right:8px}
+.row-label{height:56px;display:flex;align-items:center;gap:8px;padding-inline-start:calc(var(--level) * 28px + 16px);padding-right:8px}
 .expand-button{display:grid;place-items:center;flex:none;width:16px;height:20px;border:0;background:transparent;padding:0;cursor:pointer;color:#141413}
 .chevron{width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg);transition:transform .15s ease}
 .chevron.opened{transform:rotate(45deg)}
@@ -35,4 +36,24 @@ tbody tr:hover th,tbody tr:hover td{background:#faf9f5}
 .status-card p{margin:0 0 14px}
 .status-card button{border:1px solid #141413;background:#fff;border-radius:4px;padding:7px 12px;cursor:pointer}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-@media(max-width:600px){.page{padding-inline:12px}.content{padding-top:20px}h1{font-size:30px;line-height:40px}.chart{height:430px}}
+@media(max-width:1439px){
+  .month-control{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 16px 0;font-size:14px}
+  .month-control select{min-width:0;max-width:100%;height:40px;padding:0 12px;border:1px solid #14141333;border-radius:4px;background:#fff;color:#141413;font:inherit}
+  .table-scroll{overflow-x:hidden}
+  table{min-width:0;width:100%}
+  .month-column{display:none}
+  .month-column.month-current{display:table-cell}
+  thead th:first-child,tbody th{position:static;width:280px}
+  thead th:not(:first-child),tbody td{width:calc((100% - 280px)/var(--visible-months));padding:0 16px 0 8px}
+  thead th:last-child,tbody td:last-child{width:calc((100% - 280px)/var(--visible-months));padding-right:16px}
+  .row-label{min-width:0}
+  .name-button{min-width:0;overflow:hidden;text-overflow:ellipsis}
+}
+@media(max-width:600px){
+  .page{padding-inline:12px}
+  .content{padding-top:20px}
+  h1{font-size:30px;line-height:40px}
+  thead th:first-child,tbody th{width:200px}
+  thead th:not(:first-child),tbody td,thead th:last-child,tbody td:last-child{width:calc((100% - 200px)/var(--visible-months))}
+  .row-label{padding-inline-start:calc(var(--level) * 14px + 12px)}
+}
