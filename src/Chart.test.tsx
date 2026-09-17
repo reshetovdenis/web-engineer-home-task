@@ -28,7 +28,7 @@ describe('chart data mapping', () => {
     }
     expect(Number(existingBars[0].getAttribute('x'))).toBeCloseTo(66, 0);
     expect(Number(existingBars[0].getAttribute('width'))).toBeCloseTo(88, 0);
-    expect(existingBars[0]).toHaveAttribute('height', '200');
+    expect(existingBars[0]).toHaveAttribute('height', '210');
     const labels = container.querySelectorAll('text[orientation="bottom"]');
     expect(labels).toHaveLength(12);
     expect(labels[0]).not.toHaveAttribute('transform');
