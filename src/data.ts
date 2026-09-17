@@ -47,12 +47,6 @@ export interface ChartSeries {
   color: string;
 }
 
-const channelColors = {
-  'Existing clients': '#b29df8',
-  'New organic': '#f4beb4',
-  'New paid': '#a75e6e',
-} as const;
-
 function channelValues(node: BusinessNode, name: string): number[] {
   if (node.name === name && !childrenOf(node).length) return node.values;
   return months.map((_, month) => childrenOf(node).reduce((sum, child) => sum + channelValues(child, name)[month], 0));
@@ -63,9 +57,9 @@ export function chartSeries(node: BusinessNode): ChartSeries[] {
   const paid = channelValues(node, 'New paid');
   const existing = node.values.map((value, month) => value - organic[month] - paid[month]);
   return [
-    { id: 'existing', name: 'Existing clients', values: existing, color: channelColors['Existing clients'] },
-    { id: 'organic', name: 'New organic', values: organic, color: channelColors['New organic'] },
-    { id: 'paid', name: 'New paid', values: paid, color: channelColors['New paid'] },
+    { id: 'existing', name: 'Existing clients', values: existing, color: 'var(--chart-existing-clients)' },
+    { id: 'organic', name: 'New organic', values: organic, color: 'var(--chart-new-organic)' },
+    { id: 'paid', name: 'New paid', values: paid, color: 'var(--chart-new-paid)' },
   ];
 }
 

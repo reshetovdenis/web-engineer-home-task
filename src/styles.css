@@ -5,3 +5,9 @@
   --color-ink: #141413;
   --color-paper: #f7f5ed;
 }
+
+:root {
+  --chart-existing-clients: #b29df8;
+  --chart-new-organic: #f4beb4;
+  --chart-new-paid: #a75e6e;
+}

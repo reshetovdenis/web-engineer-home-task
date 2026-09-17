@@ -18,7 +18,7 @@ describe('chart data mapping', () => {
     expect(screen.getByRole('img', { name: /stacked monthly client chart for company/i })).toBeInTheDocument();
     const existingBars = container.querySelectorAll('path[name="Existing clients"]');
     expect(existingBars).toHaveLength(12);
-    expect(existingBars[0]).toHaveAttribute('fill', '#b29df8');
+    expect(existingBars[0]).toHaveAttribute('fill', 'var(--chart-existing-clients)');
     expect(Number(existingBars[0].getAttribute('x'))).toBeCloseTo(66, 0);
     expect(Number(existingBars[0].getAttribute('width'))).toBeCloseTo(88, 0);
     expect(existingBars[0]).toHaveAttribute('height', '200');
