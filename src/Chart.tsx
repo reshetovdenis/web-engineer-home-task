@@ -24,8 +24,8 @@ export function Chart({ node }: Props) {
     paid: series[2].values[index],
   }));
 
-  return <section className="chart-panel" aria-label={`Monthly clients for ${node.name}`}>
-    <div className="chart" role="img" aria-label={`Stacked monthly client chart for ${node.name}`}>
+  return <section className="min-w-0 max-w-full overflow-hidden rounded-lg bg-white" aria-label={`Monthly clients for ${node.name}`}>
+    <div className="block h-[430px] w-full min-w-0 [&_.recharts-cartesian-axis-tick-value]:fill-ink/60 [&_.recharts-cartesian-axis-tick-value]:font-sans [&_.recharts-cartesian-axis-tick-value]:text-xs [&_.recharts-cartesian-axis-tick-value]:font-normal [&_.recharts-cartesian-axis-tick-value]:tabular-nums [&_.recharts-default-legend]:font-sans [&_.recharts-default-legend]:text-xs [&_.recharts-default-legend]:font-normal [&_.recharts-legend-item-text]:text-ink/60!" role="img" aria-label={`Stacked monthly client chart for ${node.name}`}>
       <ResponsiveContainer width="100%" height={430} initialDimension={{ width: chartWidth, height: 430 }} onResize={setChartWidth}>
         <BarChart data={data} maxBarSize={88} barCategoryGap="10%"
           margin={{ top: 34, right: 16, bottom: 48, left: 0 }} accessibilityLayer={false}>

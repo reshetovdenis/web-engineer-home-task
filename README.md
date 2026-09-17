@@ -1,6 +1,6 @@
 # Cool Startup book of business
 
-A React and TypeScript dashboard for the client tree in `task.pdf`. A small Express API serves the supplied JSON. The layout, colors, spacing and table hierarchy follow frame `5:2477` in `figma-export/raw/root.json`. Selecting a row updates the chart to that node.
+A React and TypeScript dashboard for the client tree in `task.pdf`. A small Express API serves the supplied JSON. Tailwind CSS provides the layout and component styles, with shared colors and type defined in `src/styles.css`. The layout, colors, spacing and table hierarchy follow frame `5:2477` in `figma-export/raw/root.json`. Selecting a row updates the chart to that node.
 
 ## Run
 
