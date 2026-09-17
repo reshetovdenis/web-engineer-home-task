@@ -12,9 +12,7 @@ function initialChartWidth() {
 export function Chart({ node }: Props) {
   const [chartWidth, setChartWidth] = useState(initialChartWidth);
   const categoryWidth = (chartWidth - 70) / months.length;
-  const angledLabels = categoryWidth < 65;
-  const tickStep = angledLabels ? Math.ceil(48 / categoryWidth) : 1;
-  const shownMonths = months.filter((_, index) => index % tickStep === 0 || index === months.length - 1);
+  const verticalLabels = categoryWidth < 65;
   const series = chartSeries(node);
   const ceiling = Math.ceil(Math.max(...node.values, 400) / 100) * 100;
   const data = months.map((month, index) => ({
@@ -30,9 +28,9 @@ export function Chart({ node }: Props) {
         <BarChart data={data} maxBarSize={88} barCategoryGap="10%"
           margin={{ top: 34, right: 16, bottom: 48, left: 0 }} accessibilityLayer={false}>
           <CartesianGrid vertical={false} stroke="var(--chart-grid-line)" strokeWidth={1} strokeDasharray="1 6" />
-          <XAxis dataKey="month" axisLine={false} tickLine={false} height={angledLabels ? 64 : 28}
-            angle={angledLabels ? -45 : 0} textAnchor={angledLabels ? 'end' : 'middle'}
-            tickMargin={angledLabels ? 12 : 10} fontSize={12} ticks={shownMonths}
+          <XAxis dataKey="month" axisLine={false} tickLine={false} height={verticalLabels ? 72 : 28}
+            angle={verticalLabels ? -90 : 0} textAnchor={verticalLabels ? 'end' : 'middle'}
+            tickMargin={verticalLabels ? 8 : 10} fontSize={12} ticks={months}
             interval={0} tickFormatter={month => month.replace(' ', ' 20')} />
           <YAxis width={54} axisLine={false} tickLine={false} tickMargin={12}
             domain={[0, ceiling]} ticks={[0, ceiling / 4, ceiling / 2, ceiling * 3 / 4, ceiling]} />

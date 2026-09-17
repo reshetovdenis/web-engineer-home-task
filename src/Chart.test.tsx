@@ -42,12 +42,12 @@ describe('chart data mapping', () => {
     expect(series[2].values).toEqual(Array(12).fill(0));
   });
 
-  it('angles every month label at iPad mini portrait width', () => {
+  it('shows every month label vertically at iPad mini portrait width', () => {
     vi.stubGlobal('innerWidth', 768);
     const { container } = render(<Chart node={company} />);
     const labels = container.querySelectorAll('text[orientation="bottom"]');
     expect(labels).toHaveLength(12);
-    expect(labels[0].getAttribute('transform')).toContain('rotate(-45');
+    expect(labels[0].getAttribute('transform')).toContain('rotate(-90');
   });
 
   it('fits all bars inside a 375px viewport', () => {
@@ -69,9 +69,9 @@ describe('chart data mapping', () => {
     expect(bars).toHaveLength(12);
     expect(bars.every(bar => Number(bar.getAttribute('x')) + Number(bar.getAttribute('width')) <= 351)).toBe(true);
     const labels = container.querySelectorAll('text[orientation="bottom"]');
-    expect(labels).toHaveLength(5);
-    expect(labels[0].getAttribute('transform')).toContain('rotate(-45');
+    expect(labels).toHaveLength(12);
+    expect(labels[0].getAttribute('transform')).toContain('rotate(-90');
     expect(labels[0]).toHaveTextContent('Feb 2024');
-    expect(labels[4]).toHaveTextContent('Jan 2025');
+    expect(labels[11]).toHaveTextContent('Jan 2025');
   });
 });
