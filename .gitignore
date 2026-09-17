@@ -4,3 +4,4 @@ figma-export/
 *.tsbuildinfo
 .DS_Store
 /task.pdf
+/.env
