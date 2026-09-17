@@ -13,8 +13,20 @@ function availableWidth() {
 }
 
 function visibleMonthCount(width: number) {
-  const labelWidth = typeof window !== 'undefined' && window.innerWidth <= 600 ? 200 : 280;
+  const labelWidth = typeof window !== 'undefined' && window.innerWidth <= 420 ? 210
+    : typeof window !== 'undefined' && window.innerWidth <= 600 ? 200 : 280;
   return Math.max(1, Math.min(months.length, Math.floor((width - labelWidth) / 92)));
+}
+
+function EmployeeAvatar({ id, name }: { id: string; name: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) {
+    const parts = name.trim().split(/\s+/);
+    const initials = `${parts[0]?.[0] ?? ''}${parts.length > 1 ? parts.at(-1)?.[0] ?? '' : ''}`.toLocaleUpperCase();
+    return <span className="employee-avatar employee-avatar-fallback" aria-hidden="true">{initials}</span>;
+  }
+  return <img className="employee-avatar" src={`/api/avatars/${id}.jpg`} alt="" width="24" height="24"
+    loading="lazy" decoding="async" onError={() => setFailed(true)} />;
 }
 
 export function HierarchyTable({ root, selectedId, onSelect }: Props) {
@@ -89,6 +101,7 @@ export function HierarchyTable({ root, selectedId, onSelect }: Props) {
           return <tr key={row.node.id} aria-level={row.level + 1} aria-posinset={row.position} aria-setsize={row.siblingCount} aria-expanded={children.length ? isExpanded : undefined}>
             <th scope="row"><div className="row-label" style={{ '--level': row.level } as React.CSSProperties}>
               {children.length ? <button ref={element => { if (element) buttons.current.set(row.node.id, element); else buttons.current.delete(row.node.id); }} className="expand-button" type="button" aria-expanded={isExpanded} aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${row.node.name}`} onClick={() => toggle(row.node.id)} onKeyDown={event => onRowKeyDown(event, index)}><span className={`chevron ${isExpanded ? 'opened' : ''}`} aria-hidden="true" /></button> : <span className="leaf-indicator" aria-hidden="true" />}
+              {kind === 'employee' && <EmployeeAvatar id={row.node.id} name={row.node.name} />}
               <button ref={element => { if (!children.length) { if (element) buttons.current.set(row.node.id, element); else buttons.current.delete(row.node.id); } }} type="button" className="name-button" aria-current={isSelected ? 'true' : undefined} aria-label={`${row.node.name}, ${kind}, level ${row.level + 1}${row.parentId ? ', child row' : ''}; show in chart`} onClick={() => onSelect(row.node)} onKeyDown={event => onRowKeyDown(event, index)}>{row.node.name}</button>
             </div></th>
             {row.node.values.map((value, month) => <td key={month} className={`month-column${month >= firstMonth && month < firstMonth + monthCount ? ' month-current' : ''}`}>{value.toLocaleString()}</td>)}

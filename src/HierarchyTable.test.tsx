@@ -23,6 +23,29 @@ afterEach(() => {
 });
 
 describe('HierarchyTable', () => {
+  it('places the supplied circular avatar between each employee control and name', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<HierarchyTable root={company} selectedId={company.id} onSelect={vi.fn()} />);
+    await user.click(screen.getByRole('button', { name: 'Expand Branch 1' }));
+
+    const avatars = container.querySelectorAll('img.employee-avatar');
+    expect(avatars).toHaveLength(5);
+    for (const employee of company.branches[0].employees!) {
+      const name = screen.getByRole('button', { name: new RegExp(`${employee.name}, employee`) });
+      expect(name.previousElementSibling).toHaveAttribute('src', `/api/avatars/${employee.id}.jpg`);
+    }
+    const annaName = screen.getByRole('button', { name: /Anna Blackwood, employee/ });
+    const avatar = annaName.previousElementSibling;
+    expect(avatar).toHaveAttribute('src', expect.stringContaining('e3c4637b-2f21-4b7e-883e-b13ae1a6df6a.jpg'));
+    expect(avatar).toHaveAttribute('alt', '');
+    expect(avatar?.previousElementSibling).toHaveAttribute('aria-label', 'Expand Anna Blackwood');
+
+    fireEvent.error(avatar!);
+    expect(annaName.previousElementSibling).toHaveClass('employee-avatar-fallback');
+    expect(annaName.previousElementSibling).toHaveTextContent('AB');
+    expect(annaName.previousElementSibling?.previousElementSibling).toHaveAttribute('aria-label', 'Expand Anna Blackwood');
+  });
+
   it('shows four months at a time at iPad mini portrait width', async () => {
     const user = userEvent.setup();
     vi.stubGlobal('innerWidth', 768);

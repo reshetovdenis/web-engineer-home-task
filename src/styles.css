@@ -30,6 +30,8 @@ tbody tr:hover th,tbody tr:hover td{background:#faf9f5}
 .chevron{width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg);transition:transform .15s ease}
 .chevron.opened{transform:rotate(45deg)}
 .leaf-indicator{width:16px;flex:none}
+.employee-avatar{display:block;width:24px;height:24px;flex:none;border-radius:50%;object-fit:cover}
+.employee-avatar-fallback{display:grid;place-items:center;background:#e6defd;color:#5c438b;font-size:10px;font-weight:600;line-height:1}
 .name-button{border:0;background:transparent;padding:0;color:#141413;font-weight:400;cursor:pointer;text-align:left;white-space:nowrap}
 .name-button:hover{text-decoration:underline}
 .status-card{padding:24px;font-size:14px;min-height:100px}
@@ -56,4 +58,8 @@ tbody tr:hover th,tbody tr:hover td{background:#faf9f5}
   thead th:first-child,tbody th{width:200px}
   thead th:not(:first-child),tbody td,thead th:last-child,tbody td:last-child{width:calc((100% - 200px)/var(--visible-months))}
   .row-label{padding-inline-start:calc(var(--level) * 14px + 12px)}
+}
+@media(max-width:420px){
+  thead th:first-child,tbody th{width:210px}
+  thead th:not(:first-child),tbody td,thead th:last-child,tbody td:last-child{width:calc((100% - 210px)/var(--visible-months))}
 }
