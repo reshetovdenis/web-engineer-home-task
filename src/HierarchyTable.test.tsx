@@ -38,6 +38,8 @@ describe('HierarchyTable', () => {
     const avatar = annaName.previousElementSibling;
     expect(avatar).toHaveAttribute('src', expect.stringContaining('e3c4637b-2f21-4b7e-883e-b13ae1a6df6a.jpg'));
     expect(avatar).toHaveAttribute('alt', '');
+    expect(avatar).toHaveAttribute('width', '20');
+    expect(avatar).toHaveAttribute('height', '20');
     expect(avatar?.previousElementSibling).toHaveAttribute('aria-label', 'Expand Anna Blackwood');
 
     fireEvent.error(avatar!);

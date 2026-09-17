@@ -20,9 +20,10 @@ Open the Vite address shown in the terminal (usually `http://localhost:5173`). T
 - The 12 figures are treated as client counts for February 2024 through January 2025, in the order given.
 - The design legend specifies `Existing clients`, `New organic` and `New paid`. Only Anna Blackwood has explicit channels. The chart uses her supplied organic and paid figures, and treats the remainder of each selected node's reported total as existing clients. This is a presentation assumption, not a claim that all unattributed clients are actually existing clients.
 - The Figma mockup draws colored organic and paid segments in February 2024, while the supplied channel values for that month are zero. The implemented segment heights follow the supplied data, so those bars cannot be pixel-identical to the illustration.
+- Some component PNGs also show figures that differ from the supplied JSON (for example, Branch 1's July value). The table follows the JSON.
 - Some reported parent values do not equal the sum of their children (for example Company and Anna Blackwood in May 2024). The table preserves every supplied figure; the chart uses the selected row's reported total. The source of the differences needs clarification.
-- Rows with no child array are leaves. Branch 2 and Branch 3 therefore remain selectable without an expansion control.
-- The Figma export includes node geometry, styles and text but no rendered screenshot of frame `5:2477`. The page is implemented from those exported properties; browser comparison against the original Figma canvas remains an open visual check.
+- Rows with no child array are leaves. Their chevrons match the mockup visually, while the rows remain selectable without an expansion control.
+- The Figma export includes node geometry, styles, text, and rendered PNGs. The desktop page and table states were compared with those references at their native sizes.
 
 ## Next
 
