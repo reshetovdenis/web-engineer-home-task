@@ -1,0 +1,39 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+:root{font-family:Inter,Arial,sans-serif;color:#141413;background:#f7f5ed;font-synthesis:none;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+body{margin:0;min-width:320px}
+button{font:inherit}
+button:focus-visible,.table-scroll:focus-visible{outline:2px solid #795bd6;outline-offset:2px}
+.page{min-height:100vh;background:#f7f5ed;padding:0 16px 40px}
+.content{width:100%;max-width:1408px;margin:0 auto;display:flex;flex-direction:column;gap:16px;padding-top:24px}
+h1{font-family:Inter,Arial,sans-serif;font-size:35px;line-height:44px;font-weight:400;letter-spacing:0;margin:0}
+.chart-panel,.table-panel,.status-card{background:#fff;border-radius:8px;overflow:hidden}
+.chart-scroll{width:100%;overflow-x:auto;overflow-y:hidden}
+.chart{display:block;width:1408px;height:430px;max-width:none}
+.grid-line{stroke:#141413;stroke-opacity:.12;stroke-width:1}
+.axis-label,.legend-label{fill:#141413;fill-opacity:.6;font-family:Inter,Arial,sans-serif;font-size:12px;font-weight:400;font-variant-numeric:tabular-nums}
+.legend-label{fill-opacity:.6}
+.table-scroll{width:100%;overflow-x:auto}
+table{border-collapse:collapse;table-layout:fixed;min-width:1408px;width:100%;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums}
+thead th{height:56px;font-size:14px;line-height:20px;font-weight:400;color:#14141399;text-align:right;border-bottom:1px solid #14141314;white-space:nowrap;padding:0}
+thead th:first-child{width:280px;position:sticky;left:0;z-index:2;background:#fff}
+thead th:not(:first-child){width:92px;padding-left:16px}
+thead th:last-child{width:116px;padding-right:24px}
+tbody th,tbody td{height:56px;border-bottom:1px solid #14141314;padding:0;font-weight:400;background:#fff}
+tbody th{position:sticky;left:0;z-index:1;width:280px;text-align:left;white-space:nowrap}
+tbody td{width:92px;padding-left:16px;text-align:right;color:#141413}
+tbody td:last-child{width:116px;padding-right:24px}
+tbody tr:hover th,tbody tr:hover td{background:#faf9f5}
+.row-label{height:56px;display:flex;align-items:center;gap:8px;padding-right:8px}
+.expand-button{display:grid;place-items:center;flex:none;width:16px;height:20px;border:0;background:transparent;padding:0;cursor:pointer;color:#141413}
+.chevron{width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg);transition:transform .15s ease}
+.chevron.opened{transform:rotate(45deg)}
+.leaf-indicator{width:16px;flex:none}
+.name-button{border:0;background:transparent;padding:0;color:#141413;font-weight:400;cursor:pointer;text-align:left;white-space:nowrap}
+.name-button:hover{text-decoration:underline}
+.status-card{padding:24px;font-size:14px;min-height:100px}
+.status-card p{margin:0 0 14px}
+.status-card button{border:1px solid #141413;background:#fff;border-radius:4px;padding:7px 12px;cursor:pointer}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:600px){.page{padding-inline:12px}.content{padding-top:20px}h1{font-size:30px;line-height:40px}.chart{height:430px}}

@@ -1,0 +1,27 @@
+# Cool Startup book of business
+
+A React and TypeScript dashboard for the client tree in `task.pdf`. A small Express API serves the supplied JSON. The layout, colors, spacing and table hierarchy follow frame `5:2477` in `figma-export/raw/root.json`. Selecting a row updates the chart to that node.
+
+## Run
+
+Requires Node.js 20.19+.
+
+```sh
+npm install
+npm run dev
+```
+
+Open the Vite address shown in the terminal (usually `http://localhost:5173`). The API runs at `http://localhost:3002/api/company` and is proxied by Vite. Run `npm test` for the interaction and chart tests, or `npm run build` to check the production bundle. For a production run, build first, then use `NODE_ENV=production npm start`.
+
+## Decisions and open questions
+
+- The 12 figures are treated as client counts for February 2024 through January 2025, in the order given.
+- The design legend specifies `Existing clients`, `New organic` and `New paid`. Only Anna Blackwood has explicit channels. The chart uses her supplied organic and paid figures, and treats the remainder of each selected node's reported total as existing clients. This is a presentation assumption, not a claim that all unattributed clients are actually existing clients.
+- The Figma mockup draws colored organic and paid segments in February 2024, while the supplied channel values for that month are zero. The implemented segment heights follow the supplied data, so those bars cannot be pixel-identical to the illustration.
+- Some reported parent values do not equal the sum of their children (for example Company and Anna Blackwood in May 2024). The table preserves every supplied figure; the chart uses the selected row's reported total. The source of the differences needs clarification.
+- Rows with no child array are leaves. Branch 2 and Branch 3 therefore remain selectable without an expansion control.
+- The Figma export includes node geometry, styles and text but no rendered screenshot of frame `5:2477`. The page is implemented from those exported properties; browser comparison against the original Figma canvas remains an open visual check.
+
+## Next
+
+If this were a product, I would confirm how parent and child figures should reconcile, add API schema validation, support larger trees with virtualization, and add integration tests for API failures and narrow screens.
