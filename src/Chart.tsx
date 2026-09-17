@@ -29,7 +29,7 @@ export function Chart({ node }: Props) {
       <ResponsiveContainer width="100%" height={430} initialDimension={{ width: chartWidth, height: 430 }} onResize={setChartWidth}>
         <BarChart data={data} maxBarSize={88} barCategoryGap="10%"
           margin={{ top: 34, right: 16, bottom: 48, left: 0 }} accessibilityLayer={false}>
-          <CartesianGrid vertical={false} stroke="#141413" strokeOpacity={0.12} />
+          <CartesianGrid vertical={false} stroke="var(--chart-grid-line)" strokeWidth={1} strokeDasharray="1 6" />
           <XAxis dataKey="month" axisLine={false} tickLine={false} height={angledLabels ? 64 : 28}
             angle={angledLabels ? -45 : 0} textAnchor={angledLabels ? 'end' : 'middle'}
             tickMargin={angledLabels ? 12 : 10} fontSize={12} ticks={shownMonths}

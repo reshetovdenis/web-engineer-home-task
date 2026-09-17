@@ -19,6 +19,13 @@ describe('chart data mapping', () => {
     const existingBars = container.querySelectorAll('path[name="Existing clients"]');
     expect(existingBars).toHaveLength(12);
     expect(existingBars[0]).toHaveAttribute('fill', 'var(--chart-existing-clients)');
+    const gridLines = container.querySelectorAll('.recharts-cartesian-grid-horizontal line');
+    expect(gridLines.length).toBeGreaterThan(0);
+    for (const line of gridLines) {
+      expect(line).toHaveAttribute('stroke', 'var(--chart-grid-line)');
+      expect(line).toHaveAttribute('stroke-width', '1');
+      expect(line).toHaveAttribute('stroke-dasharray', '1 6');
+    }
     expect(Number(existingBars[0].getAttribute('x'))).toBeCloseTo(66, 0);
     expect(Number(existingBars[0].getAttribute('width'))).toBeCloseTo(88, 0);
     expect(existingBars[0]).toHaveAttribute('height', '200');
