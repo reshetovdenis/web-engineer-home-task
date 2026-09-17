@@ -6,14 +6,13 @@ body{margin:0;min-width:320px}
 button{font:inherit}
 button:focus-visible,.table-scroll:focus-visible{outline:2px solid #795bd6;outline-offset:2px}
 .page{min-height:100vh;background:#f7f5ed;padding:0 16px 40px}
-.content{width:100%;max-width:1408px;margin:0 auto;display:flex;flex-direction:column;gap:16px;padding-top:24px}
+.content{width:100%;max-width:1408px;margin:0 auto;display:flex;flex-direction:column;gap:16px;padding-top:24px;min-width:0}
 h1{font-family:Inter,Arial,sans-serif;font-size:35px;line-height:44px;font-weight:400;letter-spacing:0;margin:0}
-.chart-panel,.table-panel,.status-card{background:#fff;border-radius:8px;overflow:hidden}
-.chart-scroll{width:100%;overflow-x:auto;overflow-y:hidden}
-.chart{display:block;width:1408px;height:430px;max-width:none}
-.grid-line{stroke:#141413;stroke-opacity:.12;stroke-width:1}
-.axis-label,.legend-label{fill:#141413;fill-opacity:.6;font-family:Inter,Arial,sans-serif;font-size:12px;font-weight:400;font-variant-numeric:tabular-nums}
-.legend-label{fill-opacity:.6}
+.chart-panel,.table-panel,.status-card{background:#fff;border-radius:8px;overflow:hidden;min-width:0;max-width:100%}
+.chart{display:block;width:100%;height:430px;min-width:0}
+.chart .recharts-cartesian-axis-tick-value{fill:#141413;fill-opacity:.6;font-family:Inter,Arial,sans-serif;font-size:12px;font-weight:400;font-variant-numeric:tabular-nums}
+.chart .recharts-default-legend{font-family:Inter,Arial,sans-serif;font-size:12px;font-weight:400}
+.chart .recharts-legend-item-text{color:#14141399!important}
 .table-scroll{width:100%;overflow-x:auto}
 table{border-collapse:collapse;table-layout:fixed;min-width:1408px;width:100%;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums}
 thead th{height:56px;font-size:14px;line-height:20px;font-weight:400;color:#14141399;text-align:right;border-bottom:1px solid #14141314;white-space:nowrap;padding:0}
