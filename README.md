@@ -2,6 +2,8 @@
 
 A React and TypeScript dashboard for the client tree in `task.pdf`. A small Express API serves the supplied JSON. Tailwind CSS provides the layout and component styles, with shared colors and type defined in `src/styles.css`. The layout, colors, spacing and table hierarchy follow frame `5:2477` in `figma-export/raw/root.json`. Selecting a row updates the chart to that node.
 
+TanStack Query loads the company tree and caches successful responses for five minutes. After that, it can refresh stale data when the dashboard mounts, the window regains focus, or the connection resumes. Failed requests show a manual retry button.
+
 ## Run
 
 Requires Node.js 20.19+.

@@ -1,11 +1,17 @@
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import company from '../data/company.json';
 
+function renderApp(queryClient = new QueryClient()) {
+  return render(<QueryClientProvider client={queryClient}><App /></QueryClientProvider>);
+}
+
 describe('App request states', () => {
   afterEach(() => {
+    cleanup();
     vi.unstubAllGlobals();
   });
 
@@ -15,7 +21,7 @@ describe('App request states', () => {
       vi.fn(() => new Promise(() => {}))
     );
 
-    render(<App />);
+    renderApp();
 
     expect(
       screen.getByRole('status')
@@ -31,7 +37,7 @@ describe('App request states', () => {
       })
     );
 
-    render(<App />);
+    renderApp();
 
     expect(
       await screen.findByRole('alert')
@@ -59,7 +65,7 @@ describe('App request states', () => {
 
     vi.stubGlobal('fetch', fetchMock);
 
-    render(<App />);
+    renderApp();
 
     await user.click(
       await screen.findByRole('button', { name: 'Try again' })
@@ -72,5 +78,23 @@ describe('App request states', () => {
         name: /stacked monthly client chart/i,
       })
     ).toBeInTheDocument();
+  });
+
+  it('uses fresh cached company data when mounted again', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => company,
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const queryClient = new QueryClient();
+    const first = renderApp(queryClient);
+    await screen.findByRole('img', { name: /stacked monthly client chart/i });
+    first.unmount();
+
+    renderApp(queryClient);
+
+    expect(screen.getByRole('img', { name: /stacked monthly client chart/i })).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

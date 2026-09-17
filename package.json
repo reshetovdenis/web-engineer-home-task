@@ -12,6 +12,7 @@
     "start": "node server/index.js"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.103.1",
     "express": "^5.1.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
