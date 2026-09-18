@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Legend, Rectangle, ResponsiveContainer, XAxis, YAxis, type BarShapeProps } from 'recharts';
-import { chartSeries, months, type BusinessNode } from './data';
+import { chartSeries, type BusinessNode } from './data';
 
-interface Props { node: BusinessNode; labels?: string[]; detail?: 'year' | 'month' | 'day' }
+interface Props { node: BusinessNode; labels: string[]; detail?: 'year' | 'month' | 'day' }
 
 function initialChartWidth() {
   if (typeof window === 'undefined') return 1408;
@@ -24,7 +24,7 @@ function yAxisTicks(values: number[]) {
   return Array.from({ length: Math.ceil(maximum / step) + 1 }, (_, index) => index * step);
 }
 
-export function Chart({ node, labels = months, detail = 'month' }: Props) {
+export function Chart({ node, labels, detail = 'month' }: Props) {
   const [chartWidth, setChartWidth] = useState(initialChartWidth);
   const categoryWidth = (chartWidth - 70) / labels.length;
   const verticalLabels = categoryWidth < 65;

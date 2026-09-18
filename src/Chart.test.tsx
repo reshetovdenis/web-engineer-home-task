@@ -1,10 +1,12 @@
 import { act, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Chart } from './Chart';
-import { chartSeries, months } from './data';
+import { chartSeries } from './data';
 import company from '../data/company.json';
 import { createReport } from '../server/report.ts';
-import { reportLabels } from './reportPeriod';
+import { fullReportRange, reportLabels } from './reportPeriod';
+
+const defaultLabels = reportLabels(fullReportRange, 'month');
 
 describe('chart data mapping', () => {
   afterEach(() => vi.unstubAllGlobals());
@@ -15,8 +17,8 @@ describe('chart data mapping', () => {
     expect(series.map(item => item.name)).toEqual(['Existing clients', 'New organic', 'New paid']);
     expect(series[1].values).toEqual(company.branches[0].employees![0].channels![1].values);
     expect(series[2].values).toEqual(company.branches[0].employees![0].channels![2].values);
-    months.forEach((_, index) => expect(series.reduce((sum, item) => sum + item.values[index], 0)).toBe(company.values[index]));
-    const { container } = render(<Chart node={company} />);
+    defaultLabels.forEach((_, index) => expect(series.reduce((sum, item) => sum + item.values[index], 0)).toBe(company.values[index]));
+    const { container } = render(<Chart node={company} labels={defaultLabels} />);
     expect(screen.getByRole('img', { name: /stacked monthly client chart for company/i })).toBeInTheDocument();
     const existingBars = container.querySelectorAll('path[name="Existing clients"]');
     expect(existingBars).toHaveLength(12);
@@ -48,7 +50,7 @@ describe('chart data mapping', () => {
   it('rounds only the outer edges of each stacked bar', () => {
     vi.stubGlobal('innerWidth', 1440);
     const anna = company.branches[0].employees![0];
-    const { container } = render(<Chart node={anna} />);
+    const { container } = render(<Chart node={anna} labels={defaultLabels} />);
     const paths = (name: string) => [...container.querySelectorAll(`path[name="${name}"]`)];
     const corners = (path: Element) => path.getAttribute('d')?.match(/A 4,4/g)?.length ?? 0;
     const existing = paths('Existing clients');
@@ -65,22 +67,22 @@ describe('chart data mapping', () => {
     vi.stubGlobal('innerWidth', 1440);
     const anna = company.branches[0].employees![0];
     const organic = anna.channels![1];
-    const { container, rerender } = render(<Chart node={company} />);
+    const { container, rerender } = render(<Chart node={company} labels={defaultLabels} />);
     const labels = () => [...container.querySelectorAll('text[orientation="left"]')]
       .map(label => label.textContent);
 
     expect(labels()).toEqual(['0', '100', '200', '300', '400']);
-    rerender(<Chart node={anna} />);
+    rerender(<Chart node={anna} labels={defaultLabels} />);
     expect(labels()).toEqual(['0', '10', '20', '30', '40']);
-    rerender(<Chart node={organic} />);
+    rerender(<Chart node={organic} labels={defaultLabels} />);
     expect(labels()).toEqual(['0', '1', '2']);
-    rerender(<Chart node={{ ...organic, values: Array(12).fill(0) }} />);
+    rerender(<Chart node={{ ...organic, values: Array(12).fill(0) }} labels={defaultLabels} />);
     expect(labels()).toEqual(['0', '1']);
   });
 
   it('shows every month label vertically at iPad mini portrait width', () => {
     vi.stubGlobal('innerWidth', 768);
-    const { container } = render(<Chart node={company} />);
+    const { container } = render(<Chart node={company} labels={defaultLabels} />);
     const labels = container.querySelectorAll('text[orientation="bottom"]');
     expect(labels).toHaveLength(12);
     expect(labels[0].getAttribute('transform')).toContain('rotate(-90');
@@ -112,7 +114,7 @@ describe('chart data mapping', () => {
     }
     vi.stubGlobal('ResizeObserver', TestResizeObserver);
 
-    const { container } = render(<Chart node={company} />);
+    const { container } = render(<Chart node={company} labels={defaultLabels} />);
     act(() => resize?.([{ contentRect: { width: 351, height: 430 } } as ResizeObserverEntry], {} as ResizeObserver));
 
     expect(container.querySelector('.recharts-wrapper > svg.recharts-surface')).toHaveAttribute('width', '351');

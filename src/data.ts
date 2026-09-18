@@ -9,8 +9,6 @@ export interface BusinessNode {
   channels?: BusinessNode[];
 }
 
-export const months = ['Feb 24', 'Mar 24', 'Apr 24', 'May 24', 'Jun 24', 'Jul 24', 'Aug 24', 'Sep 24', 'Oct 24', 'Nov 24', 'Dec 24', 'Jan 25'];
-
 export function childrenOf(node: BusinessNode): BusinessNode[] {
   return node.branches ?? node.employees ?? node.channels ?? [];
 }

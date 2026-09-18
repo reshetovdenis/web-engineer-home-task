@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { childrenOf, kindOf, months, visibleNodes, type BusinessNode } from './data';
+import { childrenOf, kindOf, visibleNodes, type BusinessNode } from './data';
 
 interface Props {
   root: BusinessNode;
   selectedId: string;
   onSelect: (node: BusinessNode) => void;
-  labels?: string[];
+  labels: string[];
   detail?: 'year' | 'month' | 'day';
 }
 
@@ -31,7 +31,7 @@ function EmployeeAvatar({ id, name }: { id: string; name: string }) {
     loading="lazy" decoding="async" onError={() => setFailed(true)} />;
 }
 
-export function HierarchyTable({ root, selectedId, onSelect, labels = months, detail = 'month' }: Props) {
+export function HierarchyTable({ root, selectedId, onSelect, labels, detail = 'month' }: Props) {
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set([root.id]));
   const [selectedMonth, setSelectedMonth] = useState(0);
   const [monthCount, setMonthCount] = useState(() => visibleMonthCount(availableWidth(), labels.length));
@@ -94,7 +94,7 @@ export function HierarchyTable({ root, selectedId, onSelect, labels = months, de
       </select>
     </div>}
     <div className="w-full overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#795bd6] max-[1440px]:overflow-x-hidden" tabIndex={0} aria-label="Client breakdown table">
-      <table className={`w-full table-fixed border-collapse text-sm leading-5 tabular-nums max-[1440px]:min-w-0 max-[1440px]:[--label-width:280px] max-[601px]:[--label-width:250px] max-[421px]:[--label-width:calc(100%_-_92px)] ${labels.length >= months.length ? 'min-w-[1408px]' : 'min-w-0'}`} role="treegrid" aria-label={`Client breakdown by ${detail}`}>
+      <table className={`w-full table-fixed border-collapse text-sm leading-5 tabular-nums max-[1440px]:min-w-0 max-[1440px]:[--label-width:280px] max-[601px]:[--label-width:250px] max-[421px]:[--label-width:calc(100%_-_92px)] ${labels.length >= 12 ? 'min-w-[1408px]' : 'min-w-0'}`} role="treegrid" aria-label={`Client breakdown by ${detail}`}>
         <thead><tr><th className="sticky left-0 z-20 h-14 w-[280px] border-b border-ink/8 bg-white p-0 text-right font-normal whitespace-nowrap text-ink/60 max-[1440px]:static max-[601px]:w-[250px] max-[421px]:w-[calc(100%_-_92px)]" scope="col"><span className="sr-only">Business unit</span></th>{visibleLabels.map(label => <th scope="col" key={label} className="month-column month-current h-14 w-[92px] border-b border-ink/8 p-0 pl-4 text-right font-normal whitespace-nowrap text-ink/60 last:w-[116px] last:pr-6 max-[1440px]:w-[calc((100%_-_var(--label-width))/var(--visible-months))] max-[1440px]:pl-2 max-[1440px]:pr-4 max-[1440px]:last:w-[calc((100%_-_var(--label-width))/var(--visible-months))] max-[1440px]:last:pr-4">{detail === 'month' ? label.replace(' ', ' 20') : label}</th>)}</tr></thead>
         <tbody>{rows.map((row, index) => {
           const children = childrenOf(row.node);

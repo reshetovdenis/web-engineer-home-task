@@ -17,7 +17,9 @@ import {
 import { HierarchyTable } from './HierarchyTable';
 import company from '../data/company.json';
 import { createReport } from '../server/report.ts';
-import { reportLabels } from './reportPeriod';
+import { fullReportRange, reportLabels } from './reportPeriod';
+
+const defaultLabels = reportLabels(fullReportRange, 'month');
 
 afterEach(() => {
   cleanup();
@@ -27,7 +29,7 @@ afterEach(() => {
 describe('HierarchyTable', () => {
   it('places the supplied circular avatar between each employee control and name', async () => {
     const user = userEvent.setup();
-    const { container } = render(<HierarchyTable root={company} selectedId={company.id} onSelect={vi.fn()} />);
+    const { container } = render(<HierarchyTable root={company} labels={defaultLabels} selectedId={company.id} onSelect={vi.fn()} />);
     await user.click(screen.getByRole('button', { name: 'Expand Branch 1' }));
 
     const avatars = container.querySelectorAll('img.employee-avatar');
@@ -53,7 +55,7 @@ describe('HierarchyTable', () => {
   it('shows four months at a time at iPad mini portrait width', async () => {
     const user = userEvent.setup();
     vi.stubGlobal('innerWidth', 768);
-    render(<HierarchyTable root={company} selectedId={company.id} onSelect={vi.fn()} />);
+    render(<HierarchyTable root={company} labels={defaultLabels} selectedId={company.id} onSelect={vi.fn()} />);
 
     const month = screen.getByRole('combobox', { name: 'Months' });
     expect(month).toHaveValue('0');
@@ -75,7 +77,7 @@ describe('HierarchyTable', () => {
   it('shows one month at 375px and keeps every month reachable', async () => {
     const user = userEvent.setup();
     vi.stubGlobal('innerWidth', 375);
-    render(<HierarchyTable root={company} selectedId={company.id} onSelect={vi.fn()} />);
+    render(<HierarchyTable root={company} labels={defaultLabels} selectedId={company.id} onSelect={vi.fn()} />);
 
     const month = screen.getByRole('combobox', { name: 'Months' });
     expect(document.querySelectorAll('thead .month-current')).toHaveLength(1);
@@ -108,6 +110,7 @@ describe('HierarchyTable', () => {
     render(
       <HierarchyTable
         root={company}
+        labels={defaultLabels}
         selectedId={company.id}
         onSelect={vi.fn()}
       />,
@@ -197,6 +200,7 @@ describe('HierarchyTable', () => {
     render(
       <HierarchyTable
         root={company}
+        labels={defaultLabels}
         selectedId={company.id}
         onSelect={vi.fn()}
       />,
