@@ -11,10 +11,12 @@ describe('report periods', () => {
       .toEqual(company.branches[0].employees![0].channels![1].values.slice(6, 9));
   });
 
-  it('uses the final included monthly observation for each year', () => {
+  it('totals the included months for each year throughout the hierarchy', () => {
     const report = reportData(company, { from: new Date(2024, 9, 1), to: new Date(2025, 0, 31) }, 'year');
     expect(report?.labels).toEqual(['2024', '2025']);
-    expect(report?.root.values).toEqual([company.values[10], company.values[11]]);
+    expect(report?.root.values).toEqual([company.values.slice(8, 11).reduce((sum, value) => sum + value, 0), company.values[11]]);
+    expect(report?.root.branches?.[0].employees?.[0].values[0]).toBe(
+      company.branches[0].employees![0].values.slice(8, 11).reduce((sum, value) => sum + value, 0));
   });
 
   it('uses the supplied API only for months wholly within its date range', () => {

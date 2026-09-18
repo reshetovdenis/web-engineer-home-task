@@ -41,6 +41,7 @@ export function HierarchyTable({ root, selectedId, onSelect, labels = months, de
   const groupStarts = Array.from({ length: Math.ceil(labels.length / monthCount) }, (_, index) =>
     Math.min(index * monthCount, labels.length - monthCount));
   const firstMonth = groupStarts.filter(start => start <= selectedMonth).at(-1) ?? 0;
+  const visibleLabels = labels.slice(firstMonth, firstMonth + monthCount);
 
   useEffect(() => {
     const update = () => setMonthCount(visibleMonthCount(panel.current?.clientWidth || availableWidth(), labels.length));
@@ -83,10 +84,6 @@ export function HierarchyTable({ root, selectedId, onSelect, labels = months, de
     if (focusId) buttons.current.get(focusId)?.focus();
   }
 
-  const monthClass = (current: boolean) => current
-    ? 'month-column month-current table-cell'
-    : 'month-column hidden';
-
   return <section ref={panel} className="min-w-0 max-w-full overflow-hidden rounded-lg bg-white" aria-label="Client breakdown" style={{ '--visible-months': monthCount } as React.CSSProperties}>
     {monthCount < labels.length && <div className="flex items-center justify-between gap-3 px-4 pt-4 text-sm">
       <label htmlFor="table-month">{detail === 'year' ? 'Years' : detail === 'day' ? 'Days' : 'Months'}</label>
@@ -98,7 +95,7 @@ export function HierarchyTable({ root, selectedId, onSelect, labels = months, de
     </div>}
     <div className="w-full overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#795bd6] max-[1440px]:overflow-x-hidden" tabIndex={0} aria-label="Client breakdown table">
       <table className={`w-full table-fixed border-collapse text-sm leading-5 tabular-nums max-[1440px]:min-w-0 max-[1440px]:[--label-width:280px] max-[601px]:[--label-width:250px] max-[421px]:[--label-width:calc(100%_-_92px)] ${labels.length >= months.length ? 'min-w-[1408px]' : 'min-w-0'}`} role="treegrid" aria-label={`Client breakdown by ${detail}`}>
-        <thead><tr><th className="sticky left-0 z-20 h-14 w-[280px] border-b border-ink/8 bg-white p-0 text-right font-normal whitespace-nowrap text-ink/60 max-[1440px]:static max-[601px]:w-[250px] max-[421px]:w-[calc(100%_-_92px)]" scope="col"><span className="sr-only">Business unit</span></th>{labels.map((label, index) => <th scope="col" key={label} className={`${monthClass(index >= firstMonth && index < firstMonth + monthCount)} h-14 w-[92px] border-b border-ink/8 p-0 pl-4 text-right font-normal whitespace-nowrap text-ink/60 last:w-[116px] last:pr-6 max-[1440px]:w-[calc((100%_-_var(--label-width))/var(--visible-months))] max-[1440px]:pl-2 max-[1440px]:pr-4 max-[1440px]:last:w-[calc((100%_-_var(--label-width))/var(--visible-months))] max-[1440px]:last:pr-4`}>{detail === 'month' ? label.replace(' ', ' 20') : label}</th>)}</tr></thead>
+        <thead><tr><th className="sticky left-0 z-20 h-14 w-[280px] border-b border-ink/8 bg-white p-0 text-right font-normal whitespace-nowrap text-ink/60 max-[1440px]:static max-[601px]:w-[250px] max-[421px]:w-[calc(100%_-_92px)]" scope="col"><span className="sr-only">Business unit</span></th>{visibleLabels.map(label => <th scope="col" key={label} className="month-column month-current h-14 w-[92px] border-b border-ink/8 p-0 pl-4 text-right font-normal whitespace-nowrap text-ink/60 last:w-[116px] last:pr-6 max-[1440px]:w-[calc((100%_-_var(--label-width))/var(--visible-months))] max-[1440px]:pl-2 max-[1440px]:pr-4 max-[1440px]:last:w-[calc((100%_-_var(--label-width))/var(--visible-months))] max-[1440px]:last:pr-4">{detail === 'month' ? label.replace(' ', ' 20') : label}</th>)}</tr></thead>
         <tbody>{rows.map((row, index) => {
           const children = childrenOf(row.node);
           const isExpanded = expanded.has(row.node.id);
@@ -110,7 +107,7 @@ export function HierarchyTable({ root, selectedId, onSelect, labels = months, de
               {kind === 'employee' && <EmployeeAvatar id={row.node.id} name={row.node.name} />}
               <button ref={element => { if (!children.length) { if (element) buttons.current.set(row.node.id, element); else buttons.current.delete(row.node.id); } }} type="button" className="cursor-pointer border-0 bg-transparent p-0 text-left font-normal whitespace-nowrap text-ink hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#795bd6] max-[1440px]:min-w-0 max-[1440px]:overflow-hidden max-[1440px]:text-ellipsis max-[601px]:whitespace-normal max-[601px]:text-clip" aria-current={isSelected ? 'true' : undefined} aria-label={`${row.node.name}, ${kind}, level ${row.level + 1}${row.parentId ? ', child row' : ''}; show in chart`} onClick={() => onSelect(row.node)} onKeyDown={event => onRowKeyDown(event, index)}>{row.node.name}</button>
             </div></th>
-            {row.node.values.map((value, month) => <td key={month} className={`${monthClass(month >= firstMonth && month < firstMonth + monthCount)} h-[55px] w-[92px] border-b border-ink/8 bg-white p-0 pl-4 text-right text-ink group-hover:bg-ink/4 last:w-[116px] last:pr-6 max-[1440px]:w-[calc((100%_-_var(--label-width))/var(--visible-months))] max-[1440px]:pl-2 max-[1440px]:pr-4 max-[1440px]:last:w-[calc((100%_-_var(--label-width))/var(--visible-months))] max-[1440px]:last:pr-4`}>{value.toLocaleString()}</td>)}
+            {row.node.values.slice(firstMonth, firstMonth + monthCount).map((value, month) => <td key={firstMonth + month} className="month-column month-current h-[55px] w-[92px] border-b border-ink/8 bg-white p-0 pl-4 text-right text-ink group-hover:bg-ink/4 last:w-[116px] last:pr-6 max-[1440px]:w-[calc((100%_-_var(--label-width))/var(--visible-months))] max-[1440px]:pl-2 max-[1440px]:pr-4 max-[1440px]:last:w-[calc((100%_-_var(--label-width))/var(--visible-months))] max-[1440px]:last:pr-4">{value.toLocaleString()}</td>)}
           </tr>;
         })}</tbody>
       </table>

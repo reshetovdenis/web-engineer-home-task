@@ -40,13 +40,13 @@ function dailyValue(node, date) {
   return Math.max(0, Math.round(previous + (current - previous) * progress + variation));
 }
 
-function projectNode(node, dates, detail) {
+function projectNode(node, periods, detail) {
   return {
     ...node,
-    values: dates.map(date => detail === 'day' ? dailyValue(node, date) : monthlyValue(node, date)),
-    ...(node.branches && { branches: node.branches.map(child => projectNode(child, dates, detail)) }),
-    ...(node.employees && { employees: node.employees.map(child => projectNode(child, dates, detail)) }),
-    ...(node.channels && { channels: node.channels.map(child => projectNode(child, dates, detail)) }),
+    values: periods.map(dates => dates.reduce((sum, date) => sum + (detail === 'day' ? dailyValue(node, date) : monthlyValue(node, date)), 0)),
+    ...(node.branches && { branches: node.branches.map(child => projectNode(child, periods, detail)) }),
+    ...(node.employees && { employees: node.employees.map(child => projectNode(child, periods, detail)) }),
+    ...(node.channels && { channels: node.channels.map(child => projectNode(child, periods, detail)) }),
   };
 }
 
@@ -73,9 +73,15 @@ export function createReport(root, fromValue, toValue, detail) {
 
   const labels = dates.map(date => detail === 'year' ? String(date.getUTCFullYear())
     : new Intl.DateTimeFormat('en-US', { month: 'short', ...(detail === 'day' ? { day: 'numeric' } : { year: '2-digit' }), timeZone: 'UTC' }).format(date));
+  const periods = dates.map(date => {
+    if (detail !== 'year') return [date];
+    const startMonth = date.getUTCFullYear() === from.getUTCFullYear() ? from.getUTCMonth() : 0;
+    return Array.from({ length: date.getUTCMonth() - startMonth + 1 }, (_, offset) =>
+      new Date(Date.UTC(date.getUTCFullYear(), startMonth + offset, 1)));
+  });
   return {
-    root: projectNode(root, dates, detail),
+    root: projectNode(root, periods, detail),
     labels,
-    generated: detail === 'day' || dates.some(date => monthIndex(date) < 0 || monthIndex(date) >= 12),
+    generated: detail === 'day' || periods.some(dates => dates.some(date => monthIndex(date) < 0 || monthIndex(date) >= 12)),
   };
 }

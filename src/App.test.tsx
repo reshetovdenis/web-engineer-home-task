@@ -101,20 +101,20 @@ describe('App request states', () => {
 
   it('loads year and day reports from the generated report endpoint', async () => {
     const user = userEvent.setup();
-    function project(node: BusinessNode, indexes: number[]): BusinessNode {
+    function project(node: BusinessNode, groups: number[][]): BusinessNode {
       return {
         ...node,
-        values: indexes.map(index => node.values[index]),
-        ...(node.branches && { branches: node.branches.map(child => project(child, indexes)) }),
-        ...(node.employees && { employees: node.employees.map(child => project(child, indexes)) }),
-        ...(node.channels && { channels: node.channels.map(child => project(child, indexes)) }),
+        values: groups.map(indexes => indexes.reduce((sum, index) => sum + node.values[index], 0)),
+        ...(node.branches && { branches: node.branches.map(child => project(child, groups)) }),
+        ...(node.employees && { employees: node.employees.map(child => project(child, groups)) }),
+        ...(node.channels && { channels: node.channels.map(child => project(child, groups)) }),
       };
     }
     const fetchMock = vi.fn(async (input: string) => {
       if (input === '/api/company') return { ok: true, json: async () => company };
       const detail = new URL(input, 'http://localhost').searchParams.get('detail');
-      const indexes = detail === 'year' ? [10, 11] : Array(31).fill(11);
-      return { ok: true, json: async () => ({ root: project(company, indexes), labels: detail === 'year' ? ['2024', '2025'] : Array.from({ length: 31 }, (_, index) => `Jan ${index + 1}`), generated: detail === 'day' }) };
+      const groups = detail === 'year' ? [Array.from({ length: 11 }, (_, index) => index), [11]] : Array.from({ length: 31 }, () => [11]);
+      return { ok: true, json: async () => ({ root: project(company, groups), labels: detail === 'year' ? ['2024', '2025'] : Array.from({ length: 31 }, (_, index) => `Jan ${index + 1}`), generated: detail === 'day' }) };
     });
     vi.stubGlobal('fetch', fetchMock);
     renderApp();

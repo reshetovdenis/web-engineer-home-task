@@ -56,7 +56,6 @@ export default function App() {
         const root = visible.root;
         const selected = selectedId ? findNode(root, selectedId) ?? root : root;
         return <>
-          {detail === 'year' && <p className="text-sm text-ink/60">Yearly values show the last available month in each year.</p>}
           {pageCount > 1 && <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-ink/70">
             <span>Showing {visible.labels[0]} – {visible.labels.at(-1)} ({currentPage + 1} of {pageCount})</span>
             <div className="flex gap-2">

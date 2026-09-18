@@ -32,11 +32,17 @@ describe('generated reports', () => {
     expect(identities(daily.root)).toEqual(identities(company));
   });
 
-  it('uses the last included month for each year', () => {
+  it('totals the selected months for each year throughout the hierarchy', () => {
     const yearly = createReport(company, '2024-10-01', '2025-02-28', 'year');
+    const monthly = createReport(company, '2024-10-01', '2025-02-28', 'month');
     expect(yearly.labels).toEqual(['2024', '2025']);
-    expect(yearly.root.values[0]).toBe(company.values[10]);
-    expect(yearly.root.values[1]).toBeGreaterThanOrEqual(0);
+    expect(yearly.root.values).toEqual([
+      monthly.root.values.slice(0, 3).reduce((sum, value) => sum + value, 0),
+      monthly.root.values.slice(3).reduce((sum, value) => sum + value, 0),
+    ]);
+    expect(yearly.root.branches[0].employees[0].values[0]).toBe(
+      monthly.root.branches[0].employees[0].values.slice(0, 3).reduce((sum, value) => sum + value, 0));
+    expect(yearly.generated).toBe(true);
   });
 
   it('supports multi-year day ranges and rejects invalid dates', () => {

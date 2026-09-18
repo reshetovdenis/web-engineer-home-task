@@ -21,20 +21,20 @@ function monthDate(index: number) {
   return new Date(2024, index + 1, 1);
 }
 
-function projectNode(node: BusinessNode, indexes: number[]): BusinessNode {
+function projectNode(node: BusinessNode, groups: number[][]): BusinessNode {
   return {
     ...node,
-    values: indexes.map(index => node.values[index]),
-    ...(node.branches && { branches: node.branches.map(child => projectNode(child, indexes)) }),
-    ...(node.employees && { employees: node.employees.map(child => projectNode(child, indexes)) }),
-    ...(node.channels && { channels: node.channels.map(child => projectNode(child, indexes)) }),
+    values: groups.map(indexes => indexes.reduce((sum, index) => sum + node.values[index], 0)),
+    ...(node.branches && { branches: node.branches.map(child => projectNode(child, groups)) }),
+    ...(node.employees && { employees: node.employees.map(child => projectNode(child, groups)) }),
+    ...(node.channels && { channels: node.channels.map(child => projectNode(child, groups)) }),
   };
 }
 
 export function reportPage(root: BusinessNode, labels: string[], start: number, size: number) {
   const end = Math.min(start + size, labels.length);
-  const indexes = Array.from({ length: end - start }, (_, index) => start + index);
-  return { root: projectNode(root, indexes), labels: labels.slice(start, end) };
+  const groups = Array.from({ length: end - start }, (_, index) => [start + index]);
+  return { root: projectNode(root, groups), labels: labels.slice(start, end) };
 }
 
 export function reportData(root: BusinessNode, range: ReportRange, detail: ReportDetail) {
@@ -46,9 +46,12 @@ export function reportData(root: BusinessNode, range: ReportRange, detail: Repor
     return start <= range.to && end >= range.from ? [index] : [];
   });
 
-  const indexes = detail === 'month' ? included : included.filter((index, position) =>
-    position === included.length - 1 || monthDate(index).getFullYear() !== monthDate(included[position + 1]).getFullYear());
-  const labels = indexes.map(index => detail === 'year' ? String(monthDate(index).getFullYear()) : months[index]);
+  const groups = detail === 'month' ? included.map(index => [index]) : included.reduce<number[][]>((result, index) => {
+    if (!result.length || monthDate(result.at(-1)![0]).getFullYear() !== monthDate(index).getFullYear()) result.push([]);
+    result.at(-1)!.push(index);
+    return result;
+  }, []);
+  const labels = groups.map(indexes => detail === 'year' ? String(monthDate(indexes[0]).getFullYear()) : months[indexes[0]]);
 
-  return { root: projectNode(root, indexes), labels };
+  return { root: projectNode(root, groups), labels };
 }

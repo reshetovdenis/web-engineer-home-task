@@ -16,6 +16,7 @@ import {
 
 import { HierarchyTable } from './HierarchyTable';
 import company from '../data/company.json';
+import { createReport } from '../server/report.js';
 
 afterEach(() => {
   cleanup();
@@ -60,7 +61,7 @@ describe('HierarchyTable', () => {
     await user.selectOptions(month, '4');
 
     expect(screen.getByRole('columnheader', { name: 'Jun 2024' })).toHaveClass('month-current');
-    expect(screen.getByRole('columnheader', { name: 'Feb 2024' })).not.toHaveClass('month-current');
+    expect(screen.queryByRole('columnheader', { name: 'Feb 2024' })).not.toBeInTheDocument();
     const companyRow = screen.getByRole('button', { name: /Company, company/ }).closest('tr')!;
     expect(companyRow.querySelectorAll('td.month-current')).toHaveLength(4);
     expect(companyRow.querySelector('td.month-current')).toHaveTextContent(String(company.values[4]));
@@ -79,6 +80,24 @@ describe('HierarchyTable', () => {
     expect(document.querySelectorAll('thead .month-current')).toHaveLength(1);
     await user.selectOptions(month, '11');
     expect(screen.getByRole('columnheader', { name: 'Jan 2025' })).toHaveClass('month-current');
+  });
+
+  it('makes the last displayed day the last table column when a month has more dates', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal('innerWidth', 1440);
+    const report = createReport(company, '2024-02-01', '2024-02-29', 'day');
+    const { container } = render(<HierarchyTable root={report.root} labels={report.labels} detail="day" selectedId={company.id} onSelect={vi.fn()} />);
+
+    const headers = container.querySelectorAll('thead th');
+    expect(headers).toHaveLength(13);
+    expect(headers[12]).toHaveTextContent('Feb 12');
+    expect(container.querySelectorAll('tbody tr:first-child td')).toHaveLength(12);
+    expect(container.querySelector('tbody tr:first-child td:last-child')).toHaveTextContent(report.root.values[11].toLocaleString());
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Days' }), '17');
+    expect(container.querySelectorAll('thead th')).toHaveLength(13);
+    expect(container.querySelector('thead th:last-child')).toHaveTextContent('Feb 29');
+    expect(container.querySelector('tbody tr:first-child td:last-child')).toHaveTextContent(report.root.values[28].toLocaleString());
   });
 
   it('expands and collapses nested rows with keyboard controls', async () => {
@@ -130,7 +149,7 @@ describe('HierarchyTable', () => {
           name: /Existing clients/,
         }),
       ).getAllByRole('cell'),
-    ).toHaveLength(12);
+    ).toHaveLength(document.querySelectorAll('thead th.month-current').length);
 
     await user.click(
       screen.getByRole('button', {
