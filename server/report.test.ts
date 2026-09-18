@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import company from '../data/company.json';
+import type { BusinessNode } from '../src/data';
 import { createReport } from './report.ts';
 
-function identities(node) {
+function identities(node: BusinessNode): string[] {
   return [node.id, node.name, ...(node.branches ?? node.employees ?? node.channels ?? []).flatMap(identities)];
 }
 
@@ -35,8 +36,8 @@ describe('generated reports', () => {
       monthly.values.slice(0, 3).reduce((sum, value) => sum + value, 0),
       monthly.values.slice(3).reduce((sum, value) => sum + value, 0),
     ]);
-    expect(yearly.branches[0].employees[0].values[0]).toBe(
-      monthly.branches[0].employees[0].values.slice(0, 3).reduce((sum, value) => sum + value, 0));
+    expect(yearly.branches![0].employees![0].values[0]).toBe(
+      monthly.branches![0].employees![0].values.slice(0, 3).reduce((sum, value) => sum + value, 0));
   });
 
   it('supports multi-year day ranges and rejects invalid dates', () => {
