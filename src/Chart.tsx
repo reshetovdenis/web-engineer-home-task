@@ -28,6 +28,7 @@ export function Chart({ node, labels, detail = 'month' }: Props) {
   const [chartWidth, setChartWidth] = useState(initialChartWidth);
   const categoryWidth = (chartWidth - 70) / labels.length;
   const verticalLabels = categoryWidth < 65;
+  const xAxisHeight = verticalLabels ? (detail === 'month' ? 96 : 72) : 44;
   const xTickFontSize = detail === 'day' && labels.length > 24 && verticalLabels
     ? Math.max(7, Math.min(12, Math.floor(categoryWidth))) : 12;
   const series = chartSeries(node);
@@ -46,7 +47,7 @@ export function Chart({ node, labels, detail = 'month' }: Props) {
         <BarChart data={data} maxBarSize={88} barCategoryGap="10%"
           margin={{ top: 34, right: 16, bottom: 32, left: 0 }} accessibilityLayer={false}>
           <CartesianGrid vertical={false} stroke="var(--chart-grid-line)" strokeWidth={1} strokeDasharray="1 6" />
-          <XAxis dataKey="month" axisLine={false} tickLine={false} height={verticalLabels ? 72 : 44}
+          <XAxis dataKey="month" axisLine={false} tickLine={false} height={xAxisHeight}
             angle={verticalLabels ? -90 : 0} textAnchor={verticalLabels ? 'end' : 'middle'}
             tickMargin={verticalLabels ? 8 : 10} fontSize={xTickFontSize} ticks={labels}
             interval={0} tickFormatter={month => detail === 'month' ? month.replace(' ', ' 20') : month} />

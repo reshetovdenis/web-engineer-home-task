@@ -88,6 +88,9 @@ describe('chart data mapping', () => {
     const labels = container.querySelectorAll('text[orientation="bottom"]');
     expect(labels).toHaveLength(12);
     expect(labels[0].getAttribute('transform')).toContain('rotate(-90');
+    const legend = container.querySelector<HTMLElement>('.recharts-legend-wrapper');
+    // The rotated month text extends about 54px below its anchor.
+    expect(Number.parseFloat(legend?.style.top ?? '0') - Number(labels[0].getAttribute('y'))).toBeGreaterThanOrEqual(82);
   });
 
   it('shows every date label on a 31-day chart page', () => {
@@ -128,5 +131,7 @@ describe('chart data mapping', () => {
     expect(labels[0].getAttribute('transform')).toContain('rotate(-90');
     expect(labels[0]).toHaveTextContent('Feb 2024');
     expect(labels[11]).toHaveTextContent('Jan 2025');
+    const legend = container.querySelector<HTMLElement>('.recharts-legend-wrapper');
+    expect(Number.parseFloat(legend?.style.top ?? '0') - Number(labels[0].getAttribute('y'))).toBeGreaterThanOrEqual(82);
   });
 });
