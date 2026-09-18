@@ -8,10 +8,6 @@ const payload = JSON.parse(await readFile(new URL('../data/company.json', import
 const avatarsDirectory = fileURLToPath(new URL('../data/images/avatars/', import.meta.url));
 const port = Number(process.env.PORT || 3002);
 
-app.get('/api/company', (_request, response) => {
-  response.set('Cache-Control', 'no-store');
-  response.json(payload);
-});
 app.get('/api/report', (request, response) => {
   try {
     const report = createReport(payload, request.query.from, request.query.to, request.query.detail);
@@ -23,6 +19,7 @@ app.get('/api/report', (request, response) => {
   }
 });
 app.use('/api/avatars', express.static(avatarsDirectory, { maxAge: '1d' }));
+app.use('/api', (_request, response) => response.sendStatus(404));
 
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(fileURLToPath(new URL('../dist/', import.meta.url))));

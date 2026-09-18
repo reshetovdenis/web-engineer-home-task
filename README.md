@@ -15,7 +15,7 @@ A dashboard based on the client data provided below, with two main parts:
 
 * Once a Period picker is added, users may select anything from a few days to several years. The dashboard should remain usable in these cases and allow the data to be displayed by day, month, or year. For this reason, I added a selector for grouping the data by day, month, or year.
 
-* Implementing these features required modifying how the API serves the payload. By default, it serves the same payload as the one provided in the take-home assignment. However, it can also serve different payloads when the user selects a date range or grouping period that differs from the default.
+* Implementing these features required modifying how the API serves the payload. The report endpoint serves the same payload as the one provided in the take-home assignment for the default period (February 2024 through January 2025, grouped by month). It serves projected values in the same data model for other periods and groupings.
 
   I did not modify the payload data model itself, since it was not clear whether doing so was allowed.
 
@@ -44,7 +44,7 @@ npm run dev
 
 Open the Vite address shown in the terminal, usually `http://localhost:5173`.
 
-The API runs at `http://localhost:3002/api/company` and is proxied by Vite.
+The API runs at `http://localhost:3002/api/report?from=2024-02-01&to=2025-01-31&detail=month` and is proxied by Vite.
 
 Run:
 

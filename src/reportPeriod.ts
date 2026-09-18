@@ -1,4 +1,4 @@
-import { months, type BusinessNode } from './data';
+import type { BusinessNode } from './data';
 
 export type ReportDetail = 'year' | 'month' | 'day';
 export interface ReportRange { from: Date; to: Date }
@@ -23,12 +23,26 @@ export function dateKey(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
-export function isOriginalMonthlyReport(range: ReportRange, detail: ReportDetail) {
-  return detail === 'month' && range.from >= firstReportDay && range.to <= lastReportDay;
-}
-
-function monthDate(index: number) {
-  return new Date(2024, index + 1, 1);
+export function reportLabels(range: ReportRange, detail: ReportDetail): string[] {
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    ...(detail === 'day' ? { day: 'numeric' } : { year: '2-digit' }),
+  });
+  const labels: string[] = [];
+  if (detail === 'year') {
+    for (let year = range.from.getFullYear(); year <= range.to.getFullYear(); year++) labels.push(String(year));
+  } else if (detail === 'month') {
+    for (let year = range.from.getFullYear(), month = range.from.getMonth();
+      year < range.to.getFullYear() || year === range.to.getFullYear() && month <= range.to.getMonth(); month++) {
+      if (month === 12) { year++; month = 0; }
+      labels.push(formatter.format(new Date(year, month, 1)));
+    }
+  } else {
+    for (const date = new Date(range.from); date <= range.to; date.setDate(date.getDate() + 1)) {
+      labels.push(formatter.format(date));
+    }
+  }
+  return labels;
 }
 
 function projectNode(node: BusinessNode, groups: number[][]): BusinessNode {
@@ -45,23 +59,4 @@ export function reportPage(root: BusinessNode, labels: string[], start: number, 
   const end = Math.min(start + size, labels.length);
   const groups = Array.from({ length: end - start }, (_, index) => [start + index]);
   return { root: projectNode(root, groups), labels: labels.slice(start, end) };
-}
-
-export function reportData(root: BusinessNode, range: ReportRange, detail: ReportDetail) {
-  if (detail === 'day') return null;
-
-  const included = months.flatMap((_, index) => {
-    const start = monthDate(index);
-    const end = new Date(start.getFullYear(), start.getMonth() + 1, 0);
-    return start <= range.to && end >= range.from ? [index] : [];
-  });
-
-  const groups = detail === 'month' ? included.map(index => [index]) : included.reduce<number[][]>((result, index) => {
-    if (!result.length || monthDate(result.at(-1)![0]).getFullYear() !== monthDate(index).getFullYear()) result.push([]);
-    result.at(-1)!.push(index);
-    return result;
-  }, []);
-  const labels = groups.map(indexes => detail === 'year' ? String(monthDate(indexes[0]).getFullYear()) : months[indexes[0]]);
-
-  return { root: projectNode(root, groups), labels };
 }

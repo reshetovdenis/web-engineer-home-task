@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import company from '../data/company.json';
-import { detailForRange, fullReportRange, isOriginalMonthlyReport, reportData } from './reportPeriod';
+import { detailForRange, fullReportRange, reportLabels } from './reportPeriod';
 
 describe('report periods', () => {
   it('chooses day, month, or year detail from the selected span', () => {
@@ -10,25 +9,19 @@ describe('report periods', () => {
     expect(detailForRange({ from: new Date(2024, 1, 15), to: new Date(2025, 1, 15) })).toBe('year');
   });
 
-  it('keeps monthly observations overlapping the selected dates', () => {
-    const report = reportData(company, { from: new Date(2024, 7, 15), to: new Date(2024, 9, 2) }, 'month');
-    expect(report?.labels).toEqual(['Aug 24', 'Sep 24', 'Oct 24']);
-    expect(report?.root.values).toEqual(company.values.slice(6, 9));
-    expect(report?.root.branches?.[0].employees?.[0].channels?.[1].values)
-      .toEqual(company.branches[0].employees![0].channels![1].values.slice(6, 9));
+  it('labels the default report to match the source observations', () => {
+    expect(reportLabels(fullReportRange, 'month')).toEqual([
+      'Feb 24', 'Mar 24', 'Apr 24', 'May 24', 'Jun 24', 'Jul 24',
+      'Aug 24', 'Sep 24', 'Oct 24', 'Nov 24', 'Dec 24', 'Jan 25',
+    ]);
   });
 
-  it('totals the included months for each year throughout the hierarchy', () => {
-    const report = reportData(company, { from: new Date(2024, 9, 1), to: new Date(2025, 0, 31) }, 'year');
-    expect(report?.labels).toEqual(['2024', '2025']);
-    expect(report?.root.values).toEqual([company.values.slice(8, 11).reduce((sum, value) => sum + value, 0), company.values[11]]);
-    expect(report?.root.branches?.[0].employees?.[0].values[0]).toBe(
-      company.branches[0].employees![0].values.slice(8, 11).reduce((sum, value) => sum + value, 0));
-  });
-
-  it('uses the supplied API only for months wholly within its date range', () => {
-    expect(isOriginalMonthlyReport({ from: new Date(2024, 1, 1), to: new Date(2025, 0, 31) }, 'month')).toBe(true);
-    expect(isOriginalMonthlyReport({ from: new Date(2025, 0, 1), to: new Date(2025, 1, 28) }, 'month')).toBe(false);
-    expect(isOriginalMonthlyReport({ from: new Date(2024, 1, 1), to: new Date(2025, 0, 31) }, 'day')).toBe(false);
+  it('labels selected day, month, and year ranges', () => {
+    expect(reportLabels({ from: new Date(2024, 7, 15), to: new Date(2024, 9, 2) }, 'month'))
+      .toEqual(['Aug 24', 'Sep 24', 'Oct 24']);
+    expect(reportLabels({ from: new Date(2024, 9, 1), to: new Date(2025, 0, 31) }, 'year'))
+      .toEqual(['2024', '2025']);
+    expect(reportLabels({ from: new Date(2024, 1, 27), to: new Date(2024, 1, 29) }, 'day'))
+      .toEqual(['Feb 27', 'Feb 28', 'Feb 29']);
   });
 });

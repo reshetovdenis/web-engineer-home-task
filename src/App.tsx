@@ -3,9 +3,8 @@ import { Chart } from './Chart';
 import { HierarchyTable } from './HierarchyTable';
 import { ReportControls } from './ReportControls';
 import { childrenOf, type BusinessNode } from './data';
-import { detailForRange, fullReportRange, isOriginalMonthlyReport, reportData, reportPage, type ReportDetail, type ReportRange } from './reportPeriod';
-import { useCompany } from './useCompany';
-import { useGeneratedReport } from './useGeneratedReport';
+import { detailForRange, fullReportRange, reportLabels, reportPage, type ReportDetail, type ReportRange } from './reportPeriod';
+import { useReport } from './useReport';
 
 function findNode(root: BusinessNode, id: string): BusinessNode | undefined {
   if (root.id === id) return root;
@@ -20,9 +19,7 @@ export default function App() {
   const [range, setRange] = useState<ReportRange>(fullReportRange);
   const [detail, setDetail] = useState<ReportDetail>('month');
   const [page, setPage] = useState(0);
-  const company = useCompany();
-  const originalMonthly = isOriginalMonthlyReport(range, detail);
-  const generatedReport = useGeneratedReport(range, detail, !originalMonthly && company.isSuccess, company.data);
+  const report = useReport(range, detail);
 
   function changeDetail(next: ReportDetail) {
     setDetail(next);
@@ -43,17 +40,14 @@ export default function App() {
         <h1 className="text-[35px]/[44px] font-normal max-[601px]:text-[30px]/[40px]">Clients</h1>
         <ReportControls range={range} onRangeChange={changeRange} detail={detail} onDetailChange={changeDetail} />
       </header>
-      {company.isPending && <div className={statusClass} role="status">Loading client data…</div>}
-      {company.isError && <div className={statusClass} role="alert"><p className="mb-[14px]">Couldn’t load client data: {company.error.message}</p><button className="cursor-pointer rounded border border-ink bg-white px-3 py-[7px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#795bd6]" type="button" onClick={() => void company.refetch()}>Try again</button></div>}
-      {company.isSuccess && (() => {
-        if (!originalMonthly && generatedReport.isPending) return <section className={statusClass} role="status">Loading report…</section>;
-        if (!originalMonthly && generatedReport.isError) return <section className={statusClass} role="alert">Couldn’t load report: {generatedReport.error.message} <button type="button" className="ml-2 cursor-pointer underline" onClick={() => void generatedReport.refetch()}>Try again</button></section>;
-        const report = originalMonthly ? reportData(company.data, range, 'month') : generatedReport.data;
-        if (!report) return null;
+      {report.isPending && <div className={statusClass} role="status">Loading client data…</div>}
+      {report.isError && <div className={statusClass} role="alert"><p className="mb-[14px]">Couldn’t load client data: {report.error.message}</p><button className="cursor-pointer rounded border border-ink bg-white px-3 py-[7px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#795bd6]" type="button" onClick={() => void report.refetch()}>Try again</button></div>}
+      {report.isSuccess && (() => {
+        const labels = reportLabels(range, detail);
         const pageSize = detail === 'day' ? 31 : detail === 'month' ? 12 : 10;
-        const pageCount = Math.ceil(report.labels.length / pageSize);
+        const pageCount = Math.ceil(labels.length / pageSize);
         const currentPage = Math.min(page, pageCount - 1);
-        const visible = reportPage(report.root, report.labels, currentPage * pageSize, pageSize);
+        const visible = reportPage(report.data, labels, currentPage * pageSize, pageSize);
         const root = visible.root;
         const selected = selectedId ? findNode(root, selectedId) ?? root : root;
         return <>

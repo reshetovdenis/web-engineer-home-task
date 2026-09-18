@@ -4,6 +4,7 @@ import { Chart } from './Chart';
 import { chartSeries, months } from './data';
 import company from '../data/company.json';
 import { createReport } from '../server/report.js';
+import { reportLabels } from './reportPeriod';
 
 describe('chart data mapping', () => {
   afterEach(() => vi.unstubAllGlobals());
@@ -88,7 +89,8 @@ describe('chart data mapping', () => {
   it('shows every date label on a 31-day chart page', () => {
     vi.stubGlobal('innerWidth', 320);
     const report = createReport(company, '2025-01-01', '2025-01-31', 'day');
-    const { container } = render(<Chart node={report.root} labels={report.labels} detail="day" />);
+    const reportDayLabels = reportLabels({ from: new Date(2025, 0, 1), to: new Date(2025, 0, 31) }, 'day');
+    const { container } = render(<Chart node={report} labels={reportDayLabels} detail="day" />);
     expect(container.querySelector('.recharts-wrapper > svg.recharts-surface')).toHaveAttribute('width', '296');
     const labels = container.querySelectorAll('text[orientation="bottom"]');
     expect(labels).toHaveLength(31);

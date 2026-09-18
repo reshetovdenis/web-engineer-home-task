@@ -5,9 +5,23 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import company from '../data/company.json';
 import type { BusinessNode } from './data';
+import { createReport } from '../server/report.js';
 
 function renderApp(queryClient = new QueryClient()) {
   return render(<QueryClientProvider client={queryClient}><App /></QueryClientProvider>);
+}
+
+function reportResponse(input: string) {
+  const params = new URL(input, 'http://localhost').searchParams;
+  return {
+    ok: true,
+    json: async () => createReport(
+      company,
+      params.get('from')!,
+      params.get('to')!,
+      params.get('detail') as 'year' | 'month' | 'day',
+    ),
+  };
 }
 
 describe('App request states', () => {
@@ -81,7 +95,7 @@ describe('App request states', () => {
     ).toBeInTheDocument();
   });
 
-  it('uses fresh cached company data when mounted again', async () => {
+  it('loads the default report and reuses fresh cached data when mounted again', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => company,
@@ -97,9 +111,10 @@ describe('App request states', () => {
 
     expect(screen.getByRole('img', { name: /stacked monthly client chart/i })).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/report?from=2024-02-01&to=2025-01-31&detail=month');
   });
 
-  it('loads year and day reports from the generated report endpoint', async () => {
+  it('loads year and day reports from the report endpoint', async () => {
     const user = userEvent.setup();
     function project(node: BusinessNode, groups: number[][]): BusinessNode {
       return {
@@ -111,10 +126,10 @@ describe('App request states', () => {
       };
     }
     const fetchMock = vi.fn(async (input: string) => {
-      if (input === '/api/company') return { ok: true, json: async () => company };
       const detail = new URL(input, 'http://localhost').searchParams.get('detail');
+      if (detail === 'month') return { ok: true, json: async () => company };
       const groups = detail === 'year' ? [Array.from({ length: 11 }, (_, index) => index), [11]] : Array.from({ length: 31 }, () => [11]);
-      return { ok: true, json: async () => ({ root: project(company, groups), labels: detail === 'year' ? ['2024', '2025'] : Array.from({ length: 31 }, (_, index) => `Jan ${index + 1}`), generated: detail === 'day' }) };
+      return { ok: true, json: async () => project(company, groups) };
     });
     vi.stubGlobal('fetch', fetchMock);
     renderApp();
@@ -131,9 +146,9 @@ describe('App request states', () => {
     expect(fetchMock.mock.calls.some(([url]) => String(url).includes('detail=day'))).toBe(true);
   });
 
-  it('generates the selected report from company data when an older API returns 404', async () => {
+  it('shows an error when a selected report is unavailable', async () => {
     const user = userEvent.setup();
-    const fetchMock = vi.fn(async (input: string) => input === '/api/company'
+    const fetchMock = vi.fn(async (input: string) => input.includes('detail=month')
       ? { ok: true, json: async () => company }
       : { ok: false, status: 404 });
     vi.stubGlobal('fetch', fetchMock);
@@ -141,21 +156,13 @@ describe('App request states', () => {
     await screen.findByRole('img', { name: /stacked monthly client chart/i });
 
     await user.selectOptions(screen.getByRole('combobox', { name: 'Detail' }), 'year');
-    expect(await screen.findByRole('img', { name: /stacked yearly client chart/i })).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: '2024' })).toBeInTheDocument();
-
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Detail' }), 'day');
-    expect(await screen.findByRole('img', { name: /stacked daily client chart/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Branch 1, branch/ })).toBeInTheDocument();
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-    expect(fetchMock.mock.calls.some(([url]) => String(url).includes('detail=day'))).toBe(true);
+    expect(await screen.findByRole('alert')).toHaveTextContent('The server returned 404.');
+    expect(fetchMock.mock.calls.some(([url]) => String(url).includes('detail=year'))).toBe(true);
   });
 
   it('selects a report period with DayPicker', async () => {
     const user = userEvent.setup();
-    vi.stubGlobal('fetch', vi.fn(async (input: string) => input === '/api/company'
-      ? { ok: true, json: async () => company }
-      : { ok: false, status: 404 }));
+    vi.stubGlobal('fetch', vi.fn(async (input: string) => reportResponse(input)));
     renderApp();
     await screen.findByRole('img', { name: /stacked monthly client chart/i });
 
@@ -173,9 +180,7 @@ describe('App request states', () => {
 
   it('keeps the first selected day when navigating to another year', async () => {
     const user = userEvent.setup();
-    vi.stubGlobal('fetch', vi.fn(async (input: string) => input === '/api/company'
-      ? { ok: true, json: async () => company }
-      : { ok: false, status: 404 }));
+    vi.stubGlobal('fetch', vi.fn(async (input: string) => reportResponse(input)));
     renderApp();
     await screen.findByRole('img', { name: /stacked monthly client chart/i });
 
@@ -192,9 +197,7 @@ describe('App request states', () => {
 
   it('accepts a range selected from a later year back to an earlier year', async () => {
     const user = userEvent.setup();
-    vi.stubGlobal('fetch', vi.fn(async (input: string) => input === '/api/company'
-      ? { ok: true, json: async () => company }
-      : { ok: false, status: 404 }));
+    vi.stubGlobal('fetch', vi.fn(async (input: string) => reportResponse(input)));
     renderApp();
     await screen.findByRole('img', { name: /stacked monthly client chart/i });
 
@@ -210,9 +213,7 @@ describe('App request states', () => {
 
   it('accepts a cross-year day range and pages the daily report', async () => {
     const user = userEvent.setup();
-    vi.stubGlobal('fetch', vi.fn(async (input: string) => input === '/api/company'
-      ? { ok: true, json: async () => company }
-      : { ok: false, status: 404 }));
+    vi.stubGlobal('fetch', vi.fn(async (input: string) => reportResponse(input)));
     renderApp();
     await screen.findByRole('img', { name: /stacked monthly client chart/i });
     await user.selectOptions(screen.getByRole('combobox', { name: 'Detail' }), 'day');

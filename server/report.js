@@ -71,17 +71,11 @@ export function createReport(root, fromValue, toValue, detail) {
     }
   }
 
-  const labels = dates.map(date => detail === 'year' ? String(date.getUTCFullYear())
-    : new Intl.DateTimeFormat('en-US', { month: 'short', ...(detail === 'day' ? { day: 'numeric' } : { year: '2-digit' }), timeZone: 'UTC' }).format(date));
   const periods = dates.map(date => {
     if (detail !== 'year') return [date];
     const startMonth = date.getUTCFullYear() === from.getUTCFullYear() ? from.getUTCMonth() : 0;
     return Array.from({ length: date.getUTCMonth() - startMonth + 1 }, (_, offset) =>
       new Date(Date.UTC(date.getUTCFullYear(), startMonth + offset, 1)));
   });
-  return {
-    root: projectNode(root, periods, detail),
-    labels,
-    generated: detail === 'day' || periods.some(dates => dates.some(date => monthIndex(date) < 0 || monthIndex(date) >= 12)),
-  };
+  return projectNode(root, periods, detail);
 }

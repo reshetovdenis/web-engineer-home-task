@@ -17,6 +17,7 @@ import {
 import { HierarchyTable } from './HierarchyTable';
 import company from '../data/company.json';
 import { createReport } from '../server/report.js';
+import { reportLabels } from './reportPeriod';
 
 afterEach(() => {
   cleanup();
@@ -86,18 +87,19 @@ describe('HierarchyTable', () => {
     const user = userEvent.setup();
     vi.stubGlobal('innerWidth', 1440);
     const report = createReport(company, '2024-02-01', '2024-02-29', 'day');
-    const { container } = render(<HierarchyTable root={report.root} labels={report.labels} detail="day" selectedId={company.id} onSelect={vi.fn()} />);
+    const labels = reportLabels({ from: new Date(2024, 1, 1), to: new Date(2024, 1, 29) }, 'day');
+    const { container } = render(<HierarchyTable root={report} labels={labels} detail="day" selectedId={company.id} onSelect={vi.fn()} />);
 
     const headers = container.querySelectorAll('thead th');
     expect(headers).toHaveLength(13);
     expect(headers[12]).toHaveTextContent('Feb 12');
     expect(container.querySelectorAll('tbody tr:first-child td')).toHaveLength(12);
-    expect(container.querySelector('tbody tr:first-child td:last-child')).toHaveTextContent(report.root.values[11].toLocaleString());
+    expect(container.querySelector('tbody tr:first-child td:last-child')).toHaveTextContent(report.values[11].toLocaleString());
 
     await user.selectOptions(screen.getByRole('combobox', { name: 'Days' }), '17');
     expect(container.querySelectorAll('thead th')).toHaveLength(13);
     expect(container.querySelector('thead th:last-child')).toHaveTextContent('Feb 29');
-    expect(container.querySelector('tbody tr:first-child td:last-child')).toHaveTextContent(report.root.values[28].toLocaleString());
+    expect(container.querySelector('tbody tr:first-child td:last-child')).toHaveTextContent(report.values[28].toLocaleString());
   });
 
   it('expands and collapses nested rows with keyboard controls', async () => {

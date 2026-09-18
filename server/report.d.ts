@@ -5,4 +5,4 @@ export function createReport(
   from: string,
   to: string,
   detail: 'year' | 'month' | 'day',
-): { root: BusinessNode; labels: string[]; generated: boolean };
+): BusinessNode;
