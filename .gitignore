@@ -5,3 +5,5 @@ figma-export/
 .DS_Store
 /task.pdf
 /.env
+/docker-compose.yml
+/update.sh
