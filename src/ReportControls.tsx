@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { DayPicker, type DateRange } from '@daypicker/react';
-import { firstReportDay, lastReportDay, type ReportDetail, type ReportRange } from './reportPeriod';
+import { firstSelectableDay, lastSelectableDay, type ReportDetail, type ReportRange } from './reportPeriod';
 
 interface Props {
   range: ReportRange;
@@ -14,6 +14,7 @@ const dateFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'n
 export function ReportControls({ range, onRangeChange, detail, onDetailChange }: Props) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<DateRange>(range);
+  const [pendingStart, setPendingStart] = useState<Date | null>(null);
   const control = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
 
@@ -38,21 +39,26 @@ export function ReportControls({ range, onRangeChange, detail, onDetailChange }:
 
   return <div className="flex flex-wrap items-center justify-end gap-2 text-sm max-[601px]:w-full max-[601px]:justify-start">
     <div className="relative" ref={control}>
-      <button ref={trigger} type="button" className="min-h-10 cursor-pointer rounded border border-ink/20 bg-white px-3 text-left text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#795bd6]" aria-haspopup="dialog" aria-expanded={open} onClick={() => { setDraft(range); setOpen(value => !value); }}>
+      <button ref={trigger} type="button" className="min-h-10 cursor-pointer rounded border border-ink/20 bg-white px-3 text-left text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#795bd6]" aria-haspopup="dialog" aria-expanded={open} onClick={() => { setDraft(range); setPendingStart(null); setOpen(value => !value); }}>
         <span className="text-ink/60">Period: </span>{dateFormatter.format(range.from)} – {dateFormatter.format(range.to)}
       </button>
       {open && <div role="dialog" aria-label="Choose report period" className="report-calendar absolute right-0 z-30 mt-2 rounded-lg border border-ink/10 bg-white p-3 shadow-lg max-[601px]:right-auto max-[601px]:left-0">
-        <DayPicker mode="range" selected={draft} onSelect={selection => {
-          if (!selection) return;
-          setDraft(selection);
-          if (selection.from && selection.to) {
-            onRangeChange({ from: selection.from, to: selection.to });
-            setOpen(false);
-            trigger.current?.focus();
+        {pendingStart && <p className="mb-2 text-xs text-ink/70" aria-live="polite">Start: {dateFormatter.format(pendingStart)}. Choose an end date.</p>}
+        <DayPicker mode="range" selected={draft} onDayClick={(date, modifiers) => {
+          if (modifiers.disabled) return;
+          if (!pendingStart) {
+            setPendingStart(date);
+            setDraft({ from: date, to: undefined });
+            return;
           }
-        }} resetOnSelect captionLayout="dropdown" defaultMonth={range.from}
-          startMonth={firstReportDay} endMonth={lastReportDay}
-          disabled={{ before: firstReportDay, after: lastReportDay }} />
+          const selection = { from: date < pendingStart ? date : pendingStart, to: date < pendingStart ? pendingStart : date };
+          onRangeChange(selection);
+          setOpen(false);
+          setPendingStart(null);
+          trigger.current?.focus();
+        }} captionLayout="dropdown" defaultMonth={range.from}
+          startMonth={firstSelectableDay} endMonth={lastSelectableDay}
+          disabled={{ before: firstSelectableDay, after: lastSelectableDay }} />
       </div>}
     </div>
     <label className="sr-only" htmlFor="report-detail">Detail</label>

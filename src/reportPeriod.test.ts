@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import company from '../data/company.json';
-import { reportData } from './reportPeriod';
+import { isOriginalMonthlyReport, reportData } from './reportPeriod';
 
 describe('report periods', () => {
   it('keeps monthly observations overlapping the selected dates', () => {
@@ -17,7 +17,9 @@ describe('report periods', () => {
     expect(report?.root.values).toEqual([company.values[10], company.values[11]]);
   });
 
-  it('does not invent daily observations', () => {
-    expect(reportData(company, { from: new Date(2024, 1, 1), to: new Date(2024, 1, 2) }, 'day')).toBeNull();
+  it('uses the supplied API only for months wholly within its date range', () => {
+    expect(isOriginalMonthlyReport({ from: new Date(2024, 1, 1), to: new Date(2025, 0, 31) }, 'month')).toBe(true);
+    expect(isOriginalMonthlyReport({ from: new Date(2025, 0, 1), to: new Date(2025, 1, 28) }, 'month')).toBe(false);
+    expect(isOriginalMonthlyReport({ from: new Date(2024, 1, 1), to: new Date(2025, 0, 31) }, 'day')).toBe(false);
   });
 });

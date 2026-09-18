@@ -1,6 +1,7 @@
 import express from 'express';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
+import { createReport } from './report.js';
 
 const app = express();
 const payload = JSON.parse(await readFile(new URL('../data/company.json', import.meta.url), 'utf8'));
@@ -10,6 +11,16 @@ const port = Number(process.env.PORT || 3002);
 app.get('/api/company', (_request, response) => {
   response.set('Cache-Control', 'no-store');
   response.json(payload);
+});
+app.get('/api/report', (request, response) => {
+  try {
+    const report = createReport(payload, request.query.from, request.query.to, request.query.detail);
+    response.set('Cache-Control', 'no-store');
+    response.json(report);
+  } catch (error) {
+    if (error instanceof RangeError) return response.status(400).json({ error: error.message });
+    throw error;
+  }
 });
 app.use('/api/avatars', express.static(avatarsDirectory, { maxAge: '1d' }));
 

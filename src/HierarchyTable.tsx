@@ -6,7 +6,7 @@ interface Props {
   selectedId: string;
   onSelect: (node: BusinessNode) => void;
   labels?: string[];
-  detail?: 'year' | 'month';
+  detail?: 'year' | 'month' | 'day';
 }
 
 function availableWidth() {
@@ -84,12 +84,12 @@ export function HierarchyTable({ root, selectedId, onSelect, labels = months, de
   }
 
   const monthClass = (current: boolean) => current
-    ? 'month-column month-current max-[1440px]:table-cell'
-    : 'month-column max-[1440px]:hidden';
+    ? 'month-column month-current table-cell'
+    : 'month-column hidden';
 
   return <section ref={panel} className="min-w-0 max-w-full overflow-hidden rounded-lg bg-white" aria-label="Client breakdown" style={{ '--visible-months': monthCount } as React.CSSProperties}>
-    {monthCount < labels.length && <div className="flex items-center justify-between gap-3 px-4 pt-4 text-sm min-[1440px]:hidden">
-      <label htmlFor="table-month">{detail === 'year' ? 'Years' : 'Months'}</label>
+    {monthCount < labels.length && <div className="flex items-center justify-between gap-3 px-4 pt-4 text-sm">
+      <label htmlFor="table-month">{detail === 'year' ? 'Years' : detail === 'day' ? 'Days' : 'Months'}</label>
       <select className="h-10 min-w-0 max-w-full rounded border border-ink/20 bg-white px-3 font-[inherit] text-ink" id="table-month" value={firstMonth} onChange={event => setSelectedMonth(Number(event.target.value))}>
         {groupStarts.map(start => <option key={start} value={start}>
           {detail === 'month' ? labels[start].replace(' ', ' 20') : labels[start]}{monthCount > 1 && ` – ${detail === 'month' ? labels[start + monthCount - 1].replace(' ', ' 20') : labels[start + monthCount - 1]}`}
@@ -97,7 +97,7 @@ export function HierarchyTable({ root, selectedId, onSelect, labels = months, de
       </select>
     </div>}
     <div className="w-full overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#795bd6] max-[1440px]:overflow-x-hidden" tabIndex={0} aria-label="Client breakdown table">
-      <table className={`w-full table-fixed border-collapse text-sm leading-5 tabular-nums max-[1440px]:min-w-0 max-[1440px]:[--label-width:280px] max-[601px]:[--label-width:250px] max-[421px]:[--label-width:calc(100%_-_92px)] ${labels.length === months.length ? 'min-w-[1408px]' : 'min-w-0'}`} role="treegrid" aria-label={`Client breakdown by ${detail}`}>
+      <table className={`w-full table-fixed border-collapse text-sm leading-5 tabular-nums max-[1440px]:min-w-0 max-[1440px]:[--label-width:280px] max-[601px]:[--label-width:250px] max-[421px]:[--label-width:calc(100%_-_92px)] ${labels.length >= months.length ? 'min-w-[1408px]' : 'min-w-0'}`} role="treegrid" aria-label={`Client breakdown by ${detail}`}>
         <thead><tr><th className="sticky left-0 z-20 h-14 w-[280px] border-b border-ink/8 bg-white p-0 text-right font-normal whitespace-nowrap text-ink/60 max-[1440px]:static max-[601px]:w-[250px] max-[421px]:w-[calc(100%_-_92px)]" scope="col"><span className="sr-only">Business unit</span></th>{labels.map((label, index) => <th scope="col" key={label} className={`${monthClass(index >= firstMonth && index < firstMonth + monthCount)} h-14 w-[92px] border-b border-ink/8 p-0 pl-4 text-right font-normal whitespace-nowrap text-ink/60 last:w-[116px] last:pr-6 max-[1440px]:w-[calc((100%_-_var(--label-width))/var(--visible-months))] max-[1440px]:pl-2 max-[1440px]:pr-4 max-[1440px]:last:w-[calc((100%_-_var(--label-width))/var(--visible-months))] max-[1440px]:last:pr-4`}>{detail === 'month' ? label.replace(' ', ' 20') : label}</th>)}</tr></thead>
         <tbody>{rows.map((row, index) => {
           const children = childrenOf(row.node);

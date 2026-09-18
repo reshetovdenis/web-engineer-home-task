@@ -4,7 +4,7 @@ A React and TypeScript dashboard for the client tree in `task.pdf`. A small Expr
 
 TanStack Query loads the company tree and caches successful responses for five minutes. After that, it can refresh stale data when the dashboard mounts, the window regains focus, or the connection resumes. Failed requests show a manual retry button.
 
-The header uses React DayPicker to select a report date range within February 2024–January 2025. Month detail includes each source month overlapping the chosen dates. Year detail shows the last available monthly client count in each included year. Day detail shows an unavailable state because the source has no daily values.
+The header uses React DayPicker to select dates from 2020 through 2030. Monthly selections wholly within February 2024–January 2025 use the supplied `/api/company` values. Other selections use `/api/report`, which generates repeatable demo values from the same company, branches, employees, and channels. If an older API process responds with 404, the browser generates the same report from the supplied company data. Supplied monthly values stay exact where available. Year detail uses the last included month in each year; day detail interpolates between monthly values. Long reports are paged in the chart and table.
 
 ## Run
 

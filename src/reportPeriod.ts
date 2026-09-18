@@ -5,7 +5,17 @@ export interface ReportRange { from: Date; to: Date }
 
 export const firstReportDay = new Date(2024, 1, 1);
 export const lastReportDay = new Date(2025, 0, 31);
+export const firstSelectableDay = new Date(2020, 0, 1);
+export const lastSelectableDay = new Date(2030, 11, 31);
 export const fullReportRange: ReportRange = { from: firstReportDay, to: lastReportDay };
+
+export function dateKey(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+export function isOriginalMonthlyReport(range: ReportRange, detail: ReportDetail) {
+  return detail === 'month' && range.from >= firstReportDay && range.to <= lastReportDay;
+}
 
 function monthDate(index: number) {
   return new Date(2024, index + 1, 1);
@@ -19,6 +29,12 @@ function projectNode(node: BusinessNode, indexes: number[]): BusinessNode {
     ...(node.employees && { employees: node.employees.map(child => projectNode(child, indexes)) }),
     ...(node.channels && { channels: node.channels.map(child => projectNode(child, indexes)) }),
   };
+}
+
+export function reportPage(root: BusinessNode, labels: string[], start: number, size: number) {
+  const end = Math.min(start + size, labels.length);
+  const indexes = Array.from({ length: end - start }, (_, index) => start + index);
+  return { root: projectNode(root, indexes), labels: labels.slice(start, end) };
 }
 
 export function reportData(root: BusinessNode, range: ReportRange, detail: ReportDetail) {
