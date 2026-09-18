@@ -9,12 +9,28 @@ function initialChartWidth() {
   return Math.min(1408, window.innerWidth - (window.innerWidth <= 600 ? 24 : 32));
 }
 
+function yAxisTicks(values: number[]) {
+  const maximum = Math.max(0, ...values);
+  if (maximum === 0) return [0, 1];
+
+  const targetStep = maximum / 4;
+  const magnitude = 10 ** Math.floor(Math.log10(targetStep));
+  const steps = [1, 2, 2.5, 5, 10].map(value => Math.max(1, value * magnitude));
+  let step = steps.reduce((closest, candidate) =>
+    Math.abs(candidate - targetStep) < Math.abs(closest - targetStep) ? candidate : closest);
+  while (Math.ceil(maximum / step) > 5) {
+    step = steps.find(candidate => candidate > step) ?? step * 2;
+  }
+  return Array.from({ length: Math.ceil(maximum / step) + 1 }, (_, index) => index * step);
+}
+
 export function Chart({ node }: Props) {
   const [chartWidth, setChartWidth] = useState(initialChartWidth);
   const categoryWidth = (chartWidth - 70) / months.length;
   const verticalLabels = categoryWidth < 65;
   const series = chartSeries(node);
-  const ceiling = Math.ceil(Math.max(...node.values, 400) / 100) * 100;
+  const ticks = yAxisTicks(node.values);
+  const ceiling = ticks.at(-1)!;
   const data = months.map((month, index) => ({
     month,
     existing: series[0].values[index],
@@ -33,7 +49,7 @@ export function Chart({ node }: Props) {
             tickMargin={verticalLabels ? 8 : 10} fontSize={12} ticks={months}
             interval={0} tickFormatter={month => month.replace(' ', ' 20')} />
           <YAxis width={54} axisLine={false} tickLine={false} tickMargin={12}
-            domain={[0, ceiling]} ticks={[0, ceiling / 4, ceiling / 2, ceiling * 3 / 4, ceiling]} />
+            domain={[0, ceiling]} ticks={ticks} />
           <Legend align="center" verticalAlign="bottom" iconType="rect" iconSize={8}
             wrapperStyle={{ top: 398, left: 0, width: '100%' }} />
           {series.map(part => <Bar key={part.id} dataKey={part.id} name={part.name}

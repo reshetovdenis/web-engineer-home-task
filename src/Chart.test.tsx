@@ -42,6 +42,23 @@ describe('chart data mapping', () => {
     expect(series[2].values).toEqual(Array(12).fill(0));
   });
 
+  it('updates Y axis levels for the selected row, including small and zero values', () => {
+    vi.stubGlobal('innerWidth', 1440);
+    const anna = company.branches[0].employees![0];
+    const organic = anna.channels![1];
+    const { container, rerender } = render(<Chart node={company} />);
+    const labels = () => [...container.querySelectorAll('text[orientation="left"]')]
+      .map(label => label.textContent);
+
+    expect(labels()).toEqual(['0', '100', '200', '300', '400']);
+    rerender(<Chart node={anna} />);
+    expect(labels()).toEqual(['0', '10', '20', '30', '40']);
+    rerender(<Chart node={organic} />);
+    expect(labels()).toEqual(['0', '1', '2']);
+    rerender(<Chart node={{ ...organic, values: Array(12).fill(0) }} />);
+    expect(labels()).toEqual(['0', '1']);
+  });
+
   it('shows every month label vertically at iPad mini portrait width', () => {
     vi.stubGlobal('innerWidth', 768);
     const { container } = render(<Chart node={company} />);
