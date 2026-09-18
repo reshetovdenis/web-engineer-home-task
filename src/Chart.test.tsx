@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Chart } from './Chart';
 import { chartSeries, months } from './data';
 import company from '../data/company.json';
-import { createReport } from '../server/report.js';
+import { createReport } from '../server/report.ts';
 import { reportLabels } from './reportPeriod';
 
 describe('chart data mapping', () => {

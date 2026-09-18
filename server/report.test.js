@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import company from '../data/company.json';
-import { createReport } from './report.js';
+import { createReport } from './report.ts';
 
 function identities(node) {
   return [node.id, node.name, ...(node.branches ?? node.employees ?? node.channels ?? []).flatMap(identities)];

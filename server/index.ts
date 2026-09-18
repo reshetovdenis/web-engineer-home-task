@@ -1,10 +1,11 @@
 import express from 'express';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { createReport } from './report.js';
+import type { BusinessNode } from '../src/data.js';
+import { createReport } from './report.ts';
 
 const app = express();
-const payload = JSON.parse(await readFile(new URL('../data/company.json', import.meta.url), 'utf8'));
+const payload: BusinessNode = JSON.parse(await readFile(new URL('../data/company.json', import.meta.url), 'utf8'));
 const avatarsDirectory = fileURLToPath(new URL('../data/images/avatars/', import.meta.url));
 const port = Number(process.env.PORT || 3002);
 

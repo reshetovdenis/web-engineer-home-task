@@ -5,11 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently -k \"npm:dev:api\" \"npm:dev:web\"",
-    "dev:api": "node server/index.js",
+    "dev:api": "tsx watch server/index.ts",
     "dev:web": "vite --host 0.0.0.0",
     "build": "tsc -b && vite build",
     "test": "vitest run",
-    "start": "node server/index.js"
+    "start": "tsx server/index.ts"
   },
   "dependencies": {
     "@daypicker/react": "^10.0.1",
@@ -17,7 +17,8 @@
     "express": "^5.1.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "recharts": "^3.10.1"
+    "recharts": "^3.10.1",
+    "tsx": "^4.23.13"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",

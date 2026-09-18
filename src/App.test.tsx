@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import company from '../data/company.json';
 import type { BusinessNode } from './data';
-import { createReport } from '../server/report.js';
+import { createReport } from '../server/report.ts';
 
 function renderApp(queryClient = new QueryClient()) {
   return render(<QueryClientProvider client={queryClient}><App /></QueryClientProvider>);

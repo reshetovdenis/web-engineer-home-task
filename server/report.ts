@@ -1,24 +1,27 @@
+import type { BusinessNode } from '../src/data.js';
+
 const firstYear = 2020;
 const lastYear = 2030;
+type ReportDetail = 'year' | 'month' | 'day';
 
-function parseDate(value) {
+function parseDate(value: unknown): Date {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) throw new RangeError('Dates must use YYYY-MM-DD.');
   const date = new Date(`${value}T00:00:00.000Z`);
   if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== value) throw new RangeError('Invalid report date.');
   return date;
 }
 
-function monthIndex(date) {
+function monthIndex(date: Date): number {
   return (date.getUTCFullYear() - 2024) * 12 + date.getUTCMonth() - 1;
 }
 
-function hash(value) {
+function hash(value: string): number {
   let result = 0;
   for (const character of value) result = (result * 31 + character.charCodeAt(0)) >>> 0;
   return result;
 }
 
-function monthlyValue(node, date) {
+function monthlyValue(node: BusinessNode, date: Date): number {
   const index = monthIndex(date);
   if (index >= 0 && index < 12) return node.values[index];
 
@@ -28,7 +31,7 @@ function monthlyValue(node, date) {
   return Math.max(0, Math.round(anchor * (1 + distance * 0.012) + seasonal));
 }
 
-function dailyValue(node, date) {
+function dailyValue(node: BusinessNode, date: Date): number {
   const year = date.getUTCFullYear();
   const month = date.getUTCMonth();
   const day = date.getUTCDate();
@@ -40,7 +43,7 @@ function dailyValue(node, date) {
   return Math.max(0, Math.round(previous + (current - previous) * progress + variation));
 }
 
-function projectNode(node, periods, detail) {
+function projectNode(node: BusinessNode, periods: Date[][], detail: ReportDetail): BusinessNode {
   return {
     ...node,
     values: periods.map(dates => dates.reduce((sum, date) => sum + (detail === 'day' ? dailyValue(node, date) : monthlyValue(node, date)), 0)),
@@ -50,13 +53,13 @@ function projectNode(node, periods, detail) {
   };
 }
 
-export function createReport(root, fromValue, toValue, detail) {
+export function createReport(root: BusinessNode, fromValue: unknown, toValue: unknown, detail: unknown): BusinessNode {
   const from = parseDate(fromValue);
   const to = parseDate(toValue);
-  if (!['year', 'month', 'day'].includes(detail)) throw new RangeError('Detail must be year, month, or day.');
+  if (detail !== 'year' && detail !== 'month' && detail !== 'day') throw new RangeError('Detail must be year, month, or day.');
   if (from > to || from.getUTCFullYear() < firstYear || to.getUTCFullYear() > lastYear) throw new RangeError('Report range must be within 2020–2030.');
 
-  const dates = [];
+  const dates: Date[] = [];
   if (detail === 'day') {
     for (let time = from.getTime(); time <= to.getTime(); time += 86400000) dates.push(new Date(time));
   } else if (detail === 'month') {

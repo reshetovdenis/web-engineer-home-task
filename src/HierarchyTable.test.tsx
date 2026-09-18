@@ -16,7 +16,7 @@ import {
 
 import { HierarchyTable } from './HierarchyTable';
 import company from '../data/company.json';
-import { createReport } from '../server/report.js';
+import { createReport } from '../server/report.ts';
 import { reportLabels } from './reportPeriod';
 
 afterEach(() => {
