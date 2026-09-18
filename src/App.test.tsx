@@ -97,4 +97,38 @@ describe('App request states', () => {
     expect(screen.getByRole('img', { name: /stacked monthly client chart/i })).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
+
+  it('changes report detail without presenting monthly values as daily data', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => company }));
+    renderApp();
+    await screen.findByRole('img', { name: /stacked monthly client chart/i });
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Detail' }), 'year');
+    expect(screen.getByRole('img', { name: /stacked yearly client chart/i })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: '2024' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: '2025' })).toBeInTheDocument();
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Detail' }), 'day');
+    expect(screen.getByRole('status')).toHaveTextContent('Daily detail is unavailable');
+    expect(screen.queryByRole('img', { name: /stacked/i })).not.toBeInTheDocument();
+  });
+
+  it('selects a report period with DayPicker', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => company }));
+    renderApp();
+    await screen.findByRole('img', { name: /stacked monthly client chart/i });
+
+    await user.click(screen.getByRole('button', { name: /Period:/ }));
+    expect(screen.getByRole('dialog', { name: 'Choose report period' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /February 15th, 2024/i }));
+    await user.click(screen.getByRole('button', { name: /February 20th, 2024/i }));
+
+    expect(screen.queryByRole('dialog', { name: 'Choose report period' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Period: Feb 15, 2024 – Feb 20, 2024/ })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Feb 2024' })).toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: 'Mar 2024' })).not.toBeInTheDocument();
+    expect(document.querySelectorAll('path[name="Existing clients"]')).toHaveLength(1);
+  });
 });

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Legend, Rectangle, ResponsiveContainer, XAxis, YAxis, type BarShapeProps } from 'recharts';
 import { chartSeries, months, type BusinessNode } from './data';
 
-interface Props { node: BusinessNode }
+interface Props { node: BusinessNode; labels?: string[]; detail?: 'year' | 'month' }
 
 function initialChartWidth() {
   if (typeof window === 'undefined') return 1408;
@@ -24,30 +24,30 @@ function yAxisTicks(values: number[]) {
   return Array.from({ length: Math.ceil(maximum / step) + 1 }, (_, index) => index * step);
 }
 
-export function Chart({ node }: Props) {
+export function Chart({ node, labels = months, detail = 'month' }: Props) {
   const [chartWidth, setChartWidth] = useState(initialChartWidth);
-  const categoryWidth = (chartWidth - 70) / months.length;
+  const categoryWidth = (chartWidth - 70) / labels.length;
   const verticalLabels = categoryWidth < 65;
   const series = chartSeries(node);
   const ticks = yAxisTicks(node.values);
   const ceiling = ticks.at(-1)!;
-  const data = months.map((month, index) => ({
+  const data = labels.map((month, index) => ({
     month,
     existing: series[0].values[index],
     organic: series[1].values[index],
     paid: series[2].values[index],
   }));
 
-  return <section className="min-w-0 max-w-full overflow-hidden rounded-lg bg-white" aria-label={`Monthly clients for ${node.name}`}>
-    <div className="block h-[430px] w-full min-w-0 [&_.recharts-cartesian-axis-tick-value]:fill-ink/60 [&_.recharts-cartesian-axis-tick-value]:font-sans [&_.recharts-cartesian-axis-tick-value]:text-xs [&_.recharts-cartesian-axis-tick-value]:font-normal [&_.recharts-cartesian-axis-tick-value]:tabular-nums [&_.recharts-default-legend]:font-sans [&_.recharts-default-legend]:text-xs [&_.recharts-default-legend]:font-normal [&_.recharts-legend-item-text]:text-ink/60!" role="img" aria-label={`Stacked monthly client chart for ${node.name}`}>
+  return <section className="min-w-0 max-w-full overflow-hidden rounded-lg bg-white" aria-label={`${detail === 'year' ? 'Yearly' : 'Monthly'} clients for ${node.name}`}>
+    <div className="block h-[430px] w-full min-w-0 [&_.recharts-cartesian-axis-tick-value]:fill-ink/60 [&_.recharts-cartesian-axis-tick-value]:font-sans [&_.recharts-cartesian-axis-tick-value]:text-xs [&_.recharts-cartesian-axis-tick-value]:font-normal [&_.recharts-cartesian-axis-tick-value]:tabular-nums [&_.recharts-default-legend]:font-sans [&_.recharts-default-legend]:text-xs [&_.recharts-default-legend]:font-normal [&_.recharts-legend-item-text]:text-ink/60!" role="img" aria-label={`Stacked ${detail === 'year' ? 'yearly' : 'monthly'} client chart for ${node.name}`}>
       <ResponsiveContainer width="100%" height={430} initialDimension={{ width: chartWidth, height: 430 }} onResize={setChartWidth}>
         <BarChart data={data} maxBarSize={88} barCategoryGap="10%"
           margin={{ top: 34, right: 16, bottom: 32, left: 0 }} accessibilityLayer={false}>
           <CartesianGrid vertical={false} stroke="var(--chart-grid-line)" strokeWidth={1} strokeDasharray="1 6" />
           <XAxis dataKey="month" axisLine={false} tickLine={false} height={verticalLabels ? 72 : 28}
             angle={verticalLabels ? -90 : 0} textAnchor={verticalLabels ? 'end' : 'middle'}
-            tickMargin={verticalLabels ? 8 : 10} fontSize={12} ticks={months}
-            interval={0} tickFormatter={month => month.replace(' ', ' 20')} />
+            tickMargin={verticalLabels ? 8 : 10} fontSize={12} ticks={labels}
+            interval={0} tickFormatter={month => detail === 'month' ? month.replace(' ', ' 20') : month} />
           <YAxis width={54} axisLine={false} tickLine={false} tickMargin={12}
             domain={[0, ceiling]} ticks={ticks} />
           <Legend align="center" verticalAlign="bottom" iconType="rect" iconSize={8}

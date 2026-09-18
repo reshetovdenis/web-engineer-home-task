@@ -5,6 +5,8 @@ interface Props {
   root: BusinessNode;
   selectedId: string;
   onSelect: (node: BusinessNode) => void;
+  labels?: string[];
+  detail?: 'year' | 'month';
 }
 
 function availableWidth() {
@@ -12,10 +14,10 @@ function availableWidth() {
   return Math.min(1408, window.innerWidth - (window.innerWidth <= 600 ? 24 : 32));
 }
 
-function visibleMonthCount(width: number) {
+function visibleMonthCount(width: number, labelCount: number) {
   const labelWidth = typeof window !== 'undefined' && window.innerWidth <= 420 ? width - 92
     : typeof window !== 'undefined' && window.innerWidth <= 600 ? 250 : 280;
-  return Math.max(1, Math.min(months.length, Math.floor((width - labelWidth) / 92)));
+  return Math.max(1, Math.min(labelCount, Math.floor((width - labelWidth) / 92)));
 }
 
 function EmployeeAvatar({ id, name }: { id: string; name: string }) {
@@ -29,25 +31,25 @@ function EmployeeAvatar({ id, name }: { id: string; name: string }) {
     loading="lazy" decoding="async" onError={() => setFailed(true)} />;
 }
 
-export function HierarchyTable({ root, selectedId, onSelect }: Props) {
+export function HierarchyTable({ root, selectedId, onSelect, labels = months, detail = 'month' }: Props) {
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set([root.id]));
   const [selectedMonth, setSelectedMonth] = useState(0);
-  const [monthCount, setMonthCount] = useState(() => visibleMonthCount(availableWidth()));
+  const [monthCount, setMonthCount] = useState(() => visibleMonthCount(availableWidth(), labels.length));
   const panel = useRef<HTMLElement>(null);
   const buttons = useRef(new Map<string, HTMLButtonElement>());
   const rows = useMemo(() => visibleNodes(root, expanded), [root, expanded]);
-  const groupStarts = Array.from({ length: Math.ceil(months.length / monthCount) }, (_, index) =>
-    Math.min(index * monthCount, months.length - monthCount));
+  const groupStarts = Array.from({ length: Math.ceil(labels.length / monthCount) }, (_, index) =>
+    Math.min(index * monthCount, labels.length - monthCount));
   const firstMonth = groupStarts.filter(start => start <= selectedMonth).at(-1) ?? 0;
 
   useEffect(() => {
-    const update = () => setMonthCount(visibleMonthCount(panel.current?.clientWidth || availableWidth()));
+    const update = () => setMonthCount(visibleMonthCount(panel.current?.clientWidth || availableWidth(), labels.length));
     update();
     window.addEventListener('resize', update);
     const observer = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(update);
     if (panel.current) observer?.observe(panel.current);
     return () => { window.removeEventListener('resize', update); observer?.disconnect(); };
-  }, []);
+  }, [labels.length]);
 
   function toggle(id: string) {
     setExpanded(previous => {
@@ -86,17 +88,17 @@ export function HierarchyTable({ root, selectedId, onSelect }: Props) {
     : 'month-column max-[1440px]:hidden';
 
   return <section ref={panel} className="min-w-0 max-w-full overflow-hidden rounded-lg bg-white" aria-label="Client breakdown" style={{ '--visible-months': monthCount } as React.CSSProperties}>
-    {monthCount < months.length && <div className="flex items-center justify-between gap-3 px-4 pt-4 text-sm min-[1440px]:hidden">
-      <label htmlFor="table-month">Months</label>
+    {monthCount < labels.length && <div className="flex items-center justify-between gap-3 px-4 pt-4 text-sm min-[1440px]:hidden">
+      <label htmlFor="table-month">{detail === 'year' ? 'Years' : 'Months'}</label>
       <select className="h-10 min-w-0 max-w-full rounded border border-ink/20 bg-white px-3 font-[inherit] text-ink" id="table-month" value={firstMonth} onChange={event => setSelectedMonth(Number(event.target.value))}>
         {groupStarts.map(start => <option key={start} value={start}>
-          {months[start].replace(' ', ' 20')}{monthCount > 1 && ` – ${months[start + monthCount - 1].replace(' ', ' 20')}`}
+          {detail === 'month' ? labels[start].replace(' ', ' 20') : labels[start]}{monthCount > 1 && ` – ${detail === 'month' ? labels[start + monthCount - 1].replace(' ', ' 20') : labels[start + monthCount - 1]}`}
         </option>)}
       </select>
     </div>}
     <div className="w-full overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#795bd6] max-[1440px]:overflow-x-hidden" tabIndex={0} aria-label="Client breakdown table">
-      <table className="w-full min-w-[1408px] table-fixed border-collapse text-sm leading-5 tabular-nums max-[1440px]:min-w-0 max-[1440px]:[--label-width:280px] max-[601px]:[--label-width:250px] max-[421px]:[--label-width:calc(100%_-_92px)]" role="treegrid" aria-label="Client breakdown by month">
-        <thead><tr><th className="sticky left-0 z-20 h-14 w-[280px] border-b border-ink/8 bg-white p-0 text-right font-normal whitespace-nowrap text-ink/60 max-[1440px]:static max-[601px]:w-[250px] max-[421px]:w-[calc(100%_-_92px)]" scope="col"><span className="sr-only">Business unit</span></th>{months.map((month, index) => <th scope="col" key={month} className={`${monthClass(index >= firstMonth && index < firstMonth + monthCount)} h-14 w-[92px] border-b border-ink/8 p-0 pl-4 text-right font-normal whitespace-nowrap text-ink/60 last:w-[116px] last:pr-6 max-[1440px]:w-[calc((100%_-_var(--label-width))/var(--visible-months))] max-[1440px]:pl-2 max-[1440px]:pr-4 max-[1440px]:last:w-[calc((100%_-_var(--label-width))/var(--visible-months))] max-[1440px]:last:pr-4`}>{month.replace(' ', ' 20')}</th>)}</tr></thead>
+      <table className={`w-full table-fixed border-collapse text-sm leading-5 tabular-nums max-[1440px]:min-w-0 max-[1440px]:[--label-width:280px] max-[601px]:[--label-width:250px] max-[421px]:[--label-width:calc(100%_-_92px)] ${labels.length === months.length ? 'min-w-[1408px]' : 'min-w-0'}`} role="treegrid" aria-label={`Client breakdown by ${detail}`}>
+        <thead><tr><th className="sticky left-0 z-20 h-14 w-[280px] border-b border-ink/8 bg-white p-0 text-right font-normal whitespace-nowrap text-ink/60 max-[1440px]:static max-[601px]:w-[250px] max-[421px]:w-[calc(100%_-_92px)]" scope="col"><span className="sr-only">Business unit</span></th>{labels.map((label, index) => <th scope="col" key={label} className={`${monthClass(index >= firstMonth && index < firstMonth + monthCount)} h-14 w-[92px] border-b border-ink/8 p-0 pl-4 text-right font-normal whitespace-nowrap text-ink/60 last:w-[116px] last:pr-6 max-[1440px]:w-[calc((100%_-_var(--label-width))/var(--visible-months))] max-[1440px]:pl-2 max-[1440px]:pr-4 max-[1440px]:last:w-[calc((100%_-_var(--label-width))/var(--visible-months))] max-[1440px]:last:pr-4`}>{detail === 'month' ? label.replace(' ', ' 20') : label}</th>)}</tr></thead>
         <tbody>{rows.map((row, index) => {
           const children = childrenOf(row.node);
           const isExpanded = expanded.has(row.node.id);

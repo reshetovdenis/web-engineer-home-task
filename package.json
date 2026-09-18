@@ -12,6 +12,7 @@
     "start": "node server/index.js"
   },
   "dependencies": {
+    "@daypicker/react": "^10.0.1",
     "@tanstack/react-query": "^5.103.1",
     "express": "^5.1.0",
     "react": "^19.1.1",

@@ -12,3 +12,14 @@
   --chart-new-paid: #a75e6e;
   --chart-grid-line: #14141329;
 }
+
+.report-calendar .rdp-root {
+  margin: 0;
+  font-family: Inter, Arial, sans-serif;
+  --rdp-accent-color: #795bd6;
+  --rdp-accent-background-color: #e6defd;
+  --rdp-day-width: 38px;
+  --rdp-day-height: 38px;
+  --rdp-day_button-width: 36px;
+  --rdp-day_button-height: 36px;
+}
