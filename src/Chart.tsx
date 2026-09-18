@@ -52,8 +52,7 @@ export function Chart({ node, labels = months, detail = 'month' }: Props) {
             interval={0} tickFormatter={month => detail === 'month' ? month.replace(' ', ' 20') : month} />
           <YAxis width={54} axisLine={false} tickLine={false} tickMargin={12} fontSize={12}
             domain={[0, ceiling]} ticks={ticks} />
-          <Legend align="center" verticalAlign="bottom" iconType="rect" iconSize={8}
-            wrapperStyle={{ top: 398, left: 0, width: '100%' }} />
+          <Legend position="bottom" iconType="rect" iconSize={8} />
           {series.map((part, partIndex) => <Bar key={part.id} dataKey={part.id} name={part.name}
             stackId="clients" fill={part.color} isAnimationActive={false}
             shape={(props: BarShapeProps) => {
