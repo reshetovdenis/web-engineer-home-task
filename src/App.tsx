@@ -57,11 +57,11 @@ export default function App() {
         const root = visible.root;
         const selected = selectedId ? findNode(root, selectedId) ?? root : root;
         return <>
-          {pageCount > 1 && <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-ink/70">
-            <span>Showing {visible.labels[0]} – {visible.labels.at(-1)} ({currentPage + 1} of {pageCount})</span>
-            <div className="flex gap-2">
-              <button type="button" className="cursor-pointer rounded border border-ink/20 bg-white px-3 py-2 disabled:cursor-default disabled:opacity-40" disabled={currentPage === 0} onClick={() => setPage(currentPage - 1)}>Previous</button>
-              <button type="button" className="cursor-pointer rounded border border-ink/20 bg-white px-3 py-2 disabled:cursor-default disabled:opacity-40" disabled={currentPage === pageCount - 1} onClick={() => setPage(currentPage + 1)}>Next</button>
+          {pageCount > 1 && <div className="flex items-center justify-end gap-3 text-right text-sm text-ink/70 max-[601px]:gap-1 max-[601px]:text-[clamp(10px,2.9vw,14px)]">
+            <span className="whitespace-nowrap">Showing {visible.labels[0]} – {visible.labels.at(-1)} ({currentPage + 1} of {pageCount})</span>
+            <div className="flex shrink-0 gap-2 max-[601px]:gap-1">
+              <button type="button" className="cursor-pointer rounded border border-ink/20 bg-white px-3 py-2 disabled:cursor-default disabled:opacity-40 max-[601px]:px-1.5 max-[601px]:py-1.5" disabled={currentPage === 0} onClick={() => setPage(currentPage - 1)}>Previous</button>
+              <button type="button" className="cursor-pointer rounded border border-ink/20 bg-white px-3 py-2 disabled:cursor-default disabled:opacity-40 max-[601px]:px-1.5 max-[601px]:py-1.5" disabled={currentPage === pageCount - 1} onClick={() => setPage(currentPage + 1)}>Next</button>
             </div>
           </div>}
           <Chart node={selected} labels={visible.labels} detail={detail} />

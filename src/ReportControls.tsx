@@ -37,12 +37,12 @@ export function ReportControls({ range, onRangeChange, detail, onDetailChange }:
     };
   }, [open]);
 
-  return <div className="flex flex-wrap items-center justify-end gap-2 text-sm max-[601px]:w-full max-[601px]:justify-start">
+  return <div className="flex flex-wrap items-center justify-end gap-2 text-sm max-[601px]:w-full">
     <div className="relative" ref={control}>
       <button ref={trigger} type="button" className="min-h-10 cursor-pointer rounded border border-ink/20 bg-white px-3 text-left text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#795bd6]" aria-haspopup="dialog" aria-expanded={open} onClick={() => { setDraft(range); setPendingStart(null); setOpen(value => !value); }}>
         <span className="text-ink/60">Period: </span>{dateFormatter.format(range.from)} – {dateFormatter.format(range.to)}
       </button>
-      {open && <div role="dialog" aria-label="Choose report period" className="report-calendar absolute right-0 z-30 mt-2 rounded-lg border border-ink/10 bg-white p-3 shadow-lg max-[601px]:right-auto max-[601px]:left-0">
+      {open && <div role="dialog" aria-label="Choose report period" className="report-calendar absolute right-0 z-30 mt-2 rounded-lg border border-ink/10 bg-white p-3 shadow-lg">
         {pendingStart && <p className="mb-2 text-xs text-ink/70" aria-live="polite">Start: {dateFormatter.format(pendingStart)}. Choose an end date.</p>}
         <DayPicker mode="range" selected={draft} onDayClick={(date, modifiers) => {
           if (modifiers.disabled) return;
