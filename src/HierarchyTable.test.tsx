@@ -222,6 +222,7 @@ describe('HierarchyTable', () => {
     expect(branch2Row).toHaveAttribute('aria-posinset', '2');
     expect(branch2Row).toHaveAttribute('aria-setsize', '3');
     expect(branch2Row).not.toHaveAttribute('aria-expanded');
+    expect(branch2Button.previousElementSibling).toBeEmptyDOMElement();
 
     const branch3Button = screen.getByRole('button', {
       name: 'Branch 3, branch, level 2, child row; show in chart',
@@ -234,6 +235,7 @@ describe('HierarchyTable', () => {
     expect(branch3Row).toHaveAttribute('aria-posinset', '3');
     expect(branch3Row).toHaveAttribute('aria-setsize', '3');
     expect(branch3Row).not.toHaveAttribute('aria-expanded');
+    expect(branch3Button.previousElementSibling).toBeEmptyDOMElement();
 
     await user.click(
       screen.getByRole('button', {
