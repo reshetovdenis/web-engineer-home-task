@@ -15,6 +15,15 @@ npm run dev
 
 Open the Vite address shown in the terminal (usually `http://localhost:5173`). The API runs at `http://localhost:3002/api/company` and is proxied by Vite. Run `npm test` for the interaction and chart tests, or `npm run build` to check the production bundle. For a production run, build first, then use `NODE_ENV=production npm start`.
 
+To run the production app with Docker:
+
+```sh
+docker build -t cool-startup-dashboard .
+docker run --rm -p 3002:3002 cool-startup-dashboard
+```
+
+Open `http://localhost:3002`.
+
 ## Decisions and open questions
 
 - The 12 figures are treated as client counts for February 2024 through January 2025, in the order given.
