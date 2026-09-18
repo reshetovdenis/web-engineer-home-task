@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, Legend, Rectangle, ResponsiveContainer, XAxis, YAxis, type BarShapeProps } from 'recharts';
 import { chartSeries, months, type BusinessNode } from './data';
 
 interface Props { node: BusinessNode }
@@ -52,8 +52,14 @@ export function Chart({ node }: Props) {
             domain={[0, ceiling]} ticks={ticks} />
           <Legend align="center" verticalAlign="bottom" iconType="rect" iconSize={8}
             wrapperStyle={{ top: 398, left: 0, width: '100%' }} />
-          {series.map(part => <Bar key={part.id} dataKey={part.id} name={part.name}
-            stackId="clients" fill={part.color} isAnimationActive={false} />)}
+          {series.map((part, partIndex) => <Bar key={part.id} dataKey={part.id} name={part.name}
+            stackId="clients" fill={part.color} isAnimationActive={false}
+            shape={(props: BarShapeProps) => {
+              const values = props.payload as Record<string, number>;
+              const roundTop = series.slice(partIndex + 1).every(upper => values[upper.id] <= 0);
+              const roundBottom = series.slice(0, partIndex).every(lower => values[lower.id] <= 0);
+              return <Rectangle {...props} radius={[roundTop ? 4 : 0, roundTop ? 4 : 0, roundBottom ? 4 : 0, roundBottom ? 4 : 0]} />;
+            }} />)}
         </BarChart>
       </ResponsiveContainer>
     </div>

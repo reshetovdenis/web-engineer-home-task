@@ -19,6 +19,7 @@ describe('chart data mapping', () => {
     const existingBars = container.querySelectorAll('path[name="Existing clients"]');
     expect(existingBars).toHaveLength(12);
     expect(existingBars[0]).toHaveAttribute('fill', 'var(--chart-existing-clients)');
+    expect(existingBars[0].getAttribute('d')?.match(/A 4,4/g)).toHaveLength(4);
     const gridLines = container.querySelectorAll('.recharts-cartesian-grid-horizontal line');
     expect(gridLines.length).toBeGreaterThan(0);
     for (const line of gridLines) {
@@ -40,6 +41,22 @@ describe('chart data mapping', () => {
     expect(series[0].values).toEqual(leaf.values);
     expect(series[1].values).toEqual(Array(12).fill(0));
     expect(series[2].values).toEqual(Array(12).fill(0));
+  });
+
+  it('rounds only the outer edges of each stacked bar', () => {
+    vi.stubGlobal('innerWidth', 1440);
+    const anna = company.branches[0].employees![0];
+    const { container } = render(<Chart node={anna} />);
+    const paths = (name: string) => [...container.querySelectorAll(`path[name="${name}"]`)];
+    const corners = (path: Element) => path.getAttribute('d')?.match(/A 4,4/g)?.length ?? 0;
+    const existing = paths('Existing clients');
+    const organic = paths('New organic');
+    const paid = paths('New paid');
+
+    expect(corners(existing[0])).toBe(4); // Only one visible segment in February.
+    expect(corners(existing[2])).toBe(2); // Bottom of the April stack.
+    expect(corners(organic[2])).toBe(0); // Interior of the April stack.
+    expect(corners(paid[2])).toBe(2); // Top of the April stack.
   });
 
   it('updates Y axis levels for the selected row, including small and zero values', () => {
