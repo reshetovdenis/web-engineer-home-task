@@ -3,7 +3,7 @@ import { Chart } from './Chart';
 import { HierarchyTable } from './HierarchyTable';
 import { ReportControls } from './ReportControls';
 import { childrenOf, type BusinessNode } from './data';
-import { fullReportRange, isOriginalMonthlyReport, reportData, reportPage, type ReportDetail, type ReportRange } from './reportPeriod';
+import { detailForRange, fullReportRange, isOriginalMonthlyReport, reportData, reportPage, type ReportDetail, type ReportRange } from './reportPeriod';
 import { useCompany } from './useCompany';
 import { useGeneratedReport } from './useGeneratedReport';
 
@@ -31,6 +31,7 @@ export default function App() {
 
   function changeRange(next: ReportRange) {
     setRange(next);
+    setDetail(detailForRange(next));
     setPage(0);
   }
 

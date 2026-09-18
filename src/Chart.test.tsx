@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Chart } from './Chart';
 import { chartSeries, months } from './data';
 import company from '../data/company.json';
+import { createReport } from '../server/report.js';
 
 describe('chart data mapping', () => {
   afterEach(() => vi.unstubAllGlobals());
@@ -82,6 +83,20 @@ describe('chart data mapping', () => {
     const labels = container.querySelectorAll('text[orientation="bottom"]');
     expect(labels).toHaveLength(12);
     expect(labels[0].getAttribute('transform')).toContain('rotate(-90');
+  });
+
+  it('shows every date label on a 31-day chart page', () => {
+    vi.stubGlobal('innerWidth', 320);
+    const report = createReport(company, '2025-01-01', '2025-01-31', 'day');
+    const { container } = render(<Chart node={report.root} labels={report.labels} detail="day" />);
+    expect(container.querySelector('.recharts-wrapper > svg.recharts-surface')).toHaveAttribute('width', '296');
+    const labels = container.querySelectorAll('text[orientation="bottom"]');
+    expect(labels).toHaveLength(31);
+    expect(labels[0]).toHaveTextContent('Jan 1');
+    expect(labels[30]).toHaveTextContent('Jan 31');
+    expect(Number(labels[30].getAttribute('x'))).toBeLessThanOrEqual(296);
+    expect([...container.querySelectorAll('path[name="Existing clients"]')]
+      .every(bar => Number(bar.getAttribute('x')) + Number(bar.getAttribute('width')) <= 296)).toBe(true);
   });
 
   it('fits all bars inside a 375px viewport', () => {

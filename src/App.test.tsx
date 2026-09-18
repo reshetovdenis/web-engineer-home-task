@@ -153,7 +153,9 @@ describe('App request states', () => {
 
   it('selects a report period with DayPicker', async () => {
     const user = userEvent.setup();
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => company }));
+    vi.stubGlobal('fetch', vi.fn(async (input: string) => input === '/api/company'
+      ? { ok: true, json: async () => company }
+      : { ok: false, status: 404 }));
     renderApp();
     await screen.findByRole('img', { name: /stacked monthly client chart/i });
 
@@ -164,9 +166,9 @@ describe('App request states', () => {
 
     expect(screen.queryByRole('dialog', { name: 'Choose report period' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Period: Feb 15, 2024 – Feb 20, 2024/ })).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: 'Feb 2024' })).toBeInTheDocument();
-    expect(screen.queryByRole('columnheader', { name: 'Mar 2024' })).not.toBeInTheDocument();
-    expect(document.querySelectorAll('path[name="Existing clients"]')).toHaveLength(1);
+    expect(screen.getByRole('combobox', { name: 'Detail' })).toHaveValue('day');
+    expect(await screen.findByRole('columnheader', { name: 'Feb 15' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Feb 20' })).toBeInTheDocument();
   });
 
   it('keeps the first selected day when navigating to another year', async () => {
@@ -185,6 +187,7 @@ describe('App request states', () => {
     await user.click(screen.getByRole('button', { name: /February 15th, 2025/i }));
 
     expect(screen.getByRole('button', { name: /Period: Feb 15, 2024 – Feb 15, 2025/ })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Detail' })).toHaveValue('year');
   });
 
   it('accepts a range selected from a later year back to an earlier year', async () => {
@@ -223,6 +226,7 @@ describe('App request states', () => {
     await user.click(screen.getByRole('button', { name: /January 15th, 2024/i }));
 
     expect(screen.getByRole('button', { name: /Period: Jan 15, 2024 – Jan 15, 2025/ })).toBeInTheDocument();
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Detail' }), 'day');
     expect(await screen.findByRole('img', { name: /stacked daily client chart/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Next' })).toBeInTheDocument();
   });

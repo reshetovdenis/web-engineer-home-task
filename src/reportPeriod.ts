@@ -9,6 +9,16 @@ export const firstSelectableDay = new Date(2020, 0, 1);
 export const lastSelectableDay = new Date(2030, 11, 31);
 export const fullReportRange: ReportRange = { from: firstReportDay, to: lastReportDay };
 
+export function detailForRange(range: ReportRange): ReportDetail {
+  const fromDay = Date.UTC(range.from.getFullYear(), range.from.getMonth(), range.from.getDate());
+  const toDay = Date.UTC(range.to.getFullYear(), range.to.getMonth(), range.to.getDate());
+  if ((toDay - fromDay) / 86400000 + 1 <= 31) return 'day';
+
+  const calendarMonths = (range.to.getFullYear() - range.from.getFullYear()) * 12
+    + range.to.getMonth() - range.from.getMonth() + 1;
+  return calendarMonths <= 12 ? 'month' : 'year';
+}
+
 export function dateKey(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }

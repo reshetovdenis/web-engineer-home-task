@@ -1,8 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import company from '../data/company.json';
-import { isOriginalMonthlyReport, reportData } from './reportPeriod';
+import { detailForRange, fullReportRange, isOriginalMonthlyReport, reportData } from './reportPeriod';
 
 describe('report periods', () => {
+  it('chooses day, month, or year detail from the selected span', () => {
+    expect(detailForRange({ from: new Date(2024, 1, 1), to: new Date(2024, 2, 2) })).toBe('day');
+    expect(detailForRange({ from: new Date(2024, 1, 1), to: new Date(2024, 2, 3) })).toBe('month');
+    expect(detailForRange(fullReportRange)).toBe('month');
+    expect(detailForRange({ from: new Date(2024, 1, 15), to: new Date(2025, 1, 15) })).toBe('year');
+  });
+
   it('keeps monthly observations overlapping the selected dates', () => {
     const report = reportData(company, { from: new Date(2024, 7, 15), to: new Date(2024, 9, 2) }, 'month');
     expect(report?.labels).toEqual(['Aug 24', 'Sep 24', 'Oct 24']);
