@@ -46,7 +46,7 @@ export function Chart({ node, labels, detail = 'month' }: Props) {
         <BarChart data={data} maxBarSize={88} barCategoryGap="10%"
           margin={{ top: 34, right: 16, bottom: 32, left: 0 }} accessibilityLayer={false}>
           <CartesianGrid vertical={false} stroke="var(--chart-grid-line)" strokeWidth={1} strokeDasharray="1 6" />
-          <XAxis dataKey="month" axisLine={false} tickLine={false} height={verticalLabels ? 72 : 28}
+          <XAxis dataKey="month" axisLine={false} tickLine={false} height={verticalLabels ? 72 : 44}
             angle={verticalLabels ? -90 : 0} textAnchor={verticalLabels ? 'end' : 'middle'}
             tickMargin={verticalLabels ? 8 : 10} fontSize={xTickFontSize} ticks={labels}
             interval={0} tickFormatter={month => detail === 'month' ? month.replace(' ', ' 20') : month} />

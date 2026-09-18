@@ -33,10 +33,12 @@ describe('chart data mapping', () => {
     }
     expect(Number(existingBars[0].getAttribute('x'))).toBeCloseTo(66, 0);
     expect(Number(existingBars[0].getAttribute('width'))).toBeCloseTo(88, 0);
-    expect(existingBars[0]).toHaveAttribute('height', '210');
+    expect(existingBars[0]).toHaveAttribute('height', '200');
     const labels = container.querySelectorAll('text[orientation="bottom"]');
     expect(labels).toHaveLength(12);
     expect(labels[0]).not.toHaveAttribute('transform');
+    const legend = container.querySelector<HTMLElement>('.recharts-legend-wrapper');
+    expect(Number.parseFloat(legend?.style.top ?? '0') - Number(labels[0].getAttribute('y'))).toBe(28);
   });
 
   it('places an unattributed leaf value in the existing-clients series', () => {
