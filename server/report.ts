@@ -2,6 +2,7 @@ import type { BusinessNode } from '../src/data.js';
 
 const firstYear = 2020;
 const lastYear = 2030;
+const maxDailyPeriods = 367;
 type ReportDetail = 'year' | 'month' | 'day';
 
 function parseDate(value: unknown): Date {
@@ -58,6 +59,9 @@ export function createReport(root: BusinessNode, fromValue: unknown, toValue: un
   const to = parseDate(toValue);
   if (detail !== 'year' && detail !== 'month' && detail !== 'day') throw new RangeError('Detail must be year, month, or day.');
   if (from > to || from.getUTCFullYear() < firstYear || to.getUTCFullYear() > lastYear) throw new RangeError('Report range must be within 2020–2030.');
+  if (detail === 'day' && (to.getTime() - from.getTime()) / 86400000 + 1 > maxDailyPeriods) {
+    throw new RangeError(`Daily reports are limited to ${maxDailyPeriods} days.`);
+  }
 
   const dates: Date[] = [];
   if (detail === 'day') {

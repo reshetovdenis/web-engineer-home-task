@@ -40,8 +40,12 @@ describe('generated reports', () => {
       monthly.branches![0].employees![0].values.slice(0, 3).reduce((sum, value) => sum + value, 0));
   });
 
-  it('supports multi-year day ranges and rejects invalid dates', () => {
-    expect(createReport(company, '2024-03-01', '2025-03-31', 'day').values).toHaveLength(396);
+  it('caps daily reports before expensive projection and rejects invalid dates', () => {
+    expect(createReport(company, '2024-01-15', '2025-01-15', 'day').values).toHaveLength(367);
+    expect(() => createReport(company, '2024-01-15', '2025-01-16', 'day'))
+      .toThrow('Daily reports are limited to 367 days.');
+    expect(() => createReport(company, '2020-01-01', '2030-12-31', 'day'))
+      .toThrow('Daily reports are limited to 367 days.');
     expect(() => createReport(company, '2025-02-30', '2025-03-01', 'month')).toThrow(RangeError);
     expect(() => createReport(company, '2025-03-01', '2025-02-01', 'month')).toThrow(RangeError);
   });
