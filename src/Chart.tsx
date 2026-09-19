@@ -28,8 +28,9 @@ export function Chart({ node, labels, detail = 'month' }: Props) {
   const [chartWidth, setChartWidth] = useState(initialChartWidth);
   const categoryWidth = (chartWidth - 70) / labels.length;
   const verticalLabels = categoryWidth < 65;
+  const tickInterval = labels.length > 31 ? Math.max(0, Math.ceil(40 / categoryWidth) - 1) : 0;
   const xAxisHeight = verticalLabels ? (detail === 'month' ? 96 : 72) : 44;
-  const xTickFontSize = detail === 'day' && labels.length > 24 && verticalLabels
+  const xTickFontSize = detail === 'day' && labels.length > 24 && labels.length <= 31 && verticalLabels
     ? Math.max(7, Math.min(12, Math.floor(categoryWidth))) : 12;
   const series = chartSeries(node);
   const ticks = yAxisTicks(node.values);
@@ -50,7 +51,7 @@ export function Chart({ node, labels, detail = 'month' }: Props) {
           <XAxis dataKey="month" axisLine={false} tickLine={false} height={xAxisHeight}
             angle={verticalLabels ? -90 : 0} textAnchor={verticalLabels ? 'end' : 'middle'}
             tickMargin={verticalLabels ? 8 : 10} fontSize={xTickFontSize} ticks={labels}
-            interval={0} tickFormatter={month => detail === 'month' ? month.replace(' ', ' 20') : month} />
+            interval={tickInterval} tickFormatter={month => detail === 'month' ? month.replace(' ', ' 20') : month} />
           <YAxis width={54} axisLine={false} tickLine={false} tickMargin={12} fontSize={12}
             domain={[0, ceiling]} ticks={ticks} />
           <Legend position="bottom" iconType="rect" iconSize={8} />

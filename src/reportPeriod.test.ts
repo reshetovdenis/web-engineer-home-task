@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { detailForRange, fullReportRange, reportLabels } from './reportPeriod';
+import { allowsDayDetail, detailForRange, fullReportRange, reportLabels } from './reportPeriod';
 
 describe('report periods', () => {
+  it('allows daily detail through the one-year anniversary', () => {
+    expect(allowsDayDetail({ from: new Date(2024, 0, 15), to: new Date(2025, 0, 15) })).toBe(true);
+    expect(allowsDayDetail({ from: new Date(2024, 0, 15), to: new Date(2025, 0, 16) })).toBe(false);
+    expect(allowsDayDetail({ from: new Date(2024, 1, 29), to: new Date(2025, 2, 1) })).toBe(true);
+    expect(allowsDayDetail({ from: new Date(2024, 1, 29), to: new Date(2025, 2, 2) })).toBe(false);
+  });
+
   it('chooses day, month, or year detail from the selected span', () => {
     expect(detailForRange({ from: new Date(2024, 1, 1), to: new Date(2024, 2, 2) })).toBe('day');
     expect(detailForRange({ from: new Date(2024, 1, 1), to: new Date(2024, 2, 3) })).toBe('month');

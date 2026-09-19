@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { DayPicker, type DateRange } from '@daypicker/react';
-import { firstSelectableDay, lastSelectableDay, type ReportDetail, type ReportRange } from './reportPeriod';
+import { allowsDayDetail, firstSelectableDay, lastSelectableDay, type ReportDetail, type ReportRange } from './reportPeriod';
 
 interface Props {
   range: ReportRange;
@@ -66,7 +66,7 @@ export function ReportControls({ range, onRangeChange, detail, onDetailChange }:
       <select id="report-detail" className="min-h-10 cursor-pointer appearance-none rounded border border-ink/20 bg-white pl-3 pr-10 text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#795bd6]" value={detail} onChange={event => onDetailChange(event.target.value as ReportDetail)}>
         <option value="year">By year</option>
         <option value="month">By month</option>
-        <option value="day">By day</option>
+        <option value="day" disabled={!allowsDayDetail(range)}>By day</option>
       </select>
       <svg className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
         <path d="m2 4 4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />

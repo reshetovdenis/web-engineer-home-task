@@ -1,5 +1,3 @@
-import type { BusinessNode } from './data';
-
 export type ReportDetail = 'year' | 'month' | 'day';
 export interface ReportRange { from: Date; to: Date }
 
@@ -8,6 +6,12 @@ export const lastReportDay = new Date(2025, 0, 31);
 export const firstSelectableDay = new Date(2020, 0, 1);
 export const lastSelectableDay = new Date(2030, 11, 31);
 export const fullReportRange: ReportRange = { from: firstReportDay, to: lastReportDay };
+
+export function allowsDayDetail(range: ReportRange): boolean {
+  const anniversary = Date.UTC(range.from.getFullYear() + 1, range.from.getMonth(), range.from.getDate());
+  const end = Date.UTC(range.to.getFullYear(), range.to.getMonth(), range.to.getDate());
+  return end <= anniversary;
+}
 
 export function detailForRange(range: ReportRange): ReportDetail {
   const fromDay = Date.UTC(range.from.getFullYear(), range.from.getMonth(), range.from.getDate());
@@ -43,20 +47,4 @@ export function reportLabels(range: ReportRange, detail: ReportDetail): string[]
     }
   }
   return labels;
-}
-
-function projectNode(node: BusinessNode, groups: number[][]): BusinessNode {
-  return {
-    ...node,
-    values: groups.map(indexes => indexes.reduce((sum, index) => sum + node.values[index], 0)),
-    ...(node.branches && { branches: node.branches.map(child => projectNode(child, groups)) }),
-    ...(node.employees && { employees: node.employees.map(child => projectNode(child, groups)) }),
-    ...(node.channels && { channels: node.channels.map(child => projectNode(child, groups)) }),
-  };
-}
-
-export function reportPage(root: BusinessNode, labels: string[], start: number, size: number) {
-  const end = Math.min(start + size, labels.length);
-  const groups = Array.from({ length: end - start }, (_, index) => [start + index]);
-  return { root: projectNode(root, groups), labels: labels.slice(start, end) };
 }

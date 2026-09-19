@@ -211,10 +211,10 @@ describe('App request states', () => {
     expect(screen.getByRole('button', { name: /Period: Feb 15, 2024 – Feb 15, 2025/ })).toBeInTheDocument();
   });
 
-  it('accepts a cross-year day range and pages the daily report', async () => {
+  it('shows a cross-year day range in one chart with narrower bars', async () => {
     const user = userEvent.setup();
     vi.stubGlobal('fetch', vi.fn(async (input: string) => reportResponse(input)));
-    renderApp();
+    const { container } = renderApp();
     await screen.findByRole('img', { name: /stacked monthly client chart/i });
     await user.selectOptions(screen.getByRole('combobox', { name: 'Detail' }), 'day');
     await screen.findByRole('img', { name: /stacked daily client chart/i });
@@ -229,6 +229,29 @@ describe('App request states', () => {
     expect(screen.getByRole('button', { name: /Period: Jan 15, 2024 – Jan 15, 2025/ })).toBeInTheDocument();
     await user.selectOptions(screen.getByRole('combobox', { name: 'Detail' }), 'day');
     expect(await screen.findByRole('img', { name: /stacked daily client chart/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Next' })).toBeInTheDocument();
+    const bars = container.querySelectorAll('path[name="Existing clients"]');
+    expect(bars).toHaveLength(367);
+    expect(Number(bars[0].getAttribute('width'))).toBeLessThan(4);
+    expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument();
+  });
+
+  it('disables daily detail when the selected period exceeds one year', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal('fetch', vi.fn(async (input: string) => reportResponse(input)));
+    renderApp();
+    await screen.findByRole('img', { name: /stacked monthly client chart/i });
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Detail' }), 'day');
+    await screen.findByRole('img', { name: /stacked daily client chart/i });
+
+    await user.click(screen.getByRole('button', { name: /Period:/ }));
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Choose the Month' }), '0');
+    await user.click(screen.getByRole('button', { name: /January 15th, 2024/i }));
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Choose the Year' }), '2025');
+    await user.click(screen.getByRole('button', { name: /January 16th, 2025/i }));
+
+    expect(screen.getByRole('button', { name: /Period: Jan 15, 2024 – Jan 16, 2025/ })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Detail' })).toHaveValue('year');
+    expect(screen.getByRole('option', { name: 'By day' })).toBeDisabled();
+    expect(await screen.findByRole('img', { name: /stacked yearly client chart/i })).toBeInTheDocument();
   });
 });

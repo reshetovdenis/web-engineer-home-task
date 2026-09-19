@@ -47,7 +47,8 @@ export interface ChartSeries {
 
 function channelValues(node: BusinessNode, name: string): number[] {
   if (node.name === name && !childrenOf(node).length) return node.values;
-  return node.values.map((_, month) => childrenOf(node).reduce((sum, child) => sum + channelValues(child, name)[month], 0));
+  const childValues = childrenOf(node).map(child => channelValues(child, name));
+  return node.values.map((_, month) => childValues.reduce((sum, values) => sum + values[month], 0));
 }
 
 export function chartSeries(node: BusinessNode): ChartSeries[] {
