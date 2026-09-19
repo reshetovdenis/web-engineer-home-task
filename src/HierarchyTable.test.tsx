@@ -196,6 +196,86 @@ describe('HierarchyTable', () => {
     ).toHaveFocus();
   });
 
+
+  it('windows large visible row sets instead of mounting every row', () => {
+    const largeCompany = toBusinessNode({
+      ...rawCompany,
+      branches: Array.from({ length: 500 }, (_, index) => ({
+        id: `branch-${index + 1}`,
+        name: `Large Branch ${index + 1}`,
+        values: rawCompany.values,
+      })),
+    });
+    const { container } = render(<HierarchyTable root={largeCompany} labels={defaultLabels} selectedId={largeCompany.id} onSelect={vi.fn()} />);
+
+    const treegrid = screen.getByRole('treegrid', { name: 'Client breakdown by month' });
+    expect(treegrid).toHaveAttribute('aria-rowcount', '502');
+    expect(container.querySelectorAll('tbody tr[data-row-index]')).toHaveLength(20);
+    expect(screen.queryByRole('button', { name: /Large Branch 300, branch/ })).not.toBeInTheDocument();
+
+    const scrollContainer = screen.getByLabelText('Client breakdown table');
+    scrollContainer.scrollTop = 300 * 55;
+    fireEvent.scroll(scrollContainer);
+
+    expect(screen.getByRole('button', { name: /Large Branch 300, branch/ })).toBeInTheDocument();
+    expect(container.querySelectorAll('tbody tr[data-row-index]').length).toBeLessThan(30);
+  });
+
+
+  it('requests the next child page only when the virtual window approaches the loaded tail', async () => {
+    const user = userEvent.setup();
+    const values = rawCompany.values;
+    const pagedCompany = toBusinessNode({
+      id: 'paged-company',
+      name: 'Paged Company',
+      values,
+      childCount: 1,
+      childrenLoaded: true,
+      branches: [{
+        id: 'paged-branch',
+        name: 'Paged Branch',
+        values,
+        hasChildren: true,
+        childCount: 120,
+        childrenLoaded: false,
+        employees: Array.from({ length: 50 }, (_, index) => ({
+          id: `paged-employee-${index + 1}`,
+          name: `Paged Employee ${index + 1}`,
+          values,
+          hasChildren: false,
+          childCount: 0,
+          childrenLoaded: true,
+        })),
+      }],
+    });
+    const onLoadChildren = vi.fn().mockResolvedValue(undefined);
+
+    render(<HierarchyTable
+      root={pagedCompany}
+      labels={defaultLabels}
+      selectedId={pagedCompany.id}
+      onSelect={vi.fn()}
+      onLoadChildren={onLoadChildren}
+    />);
+
+    await user.click(screen.getByRole('button', { name: 'Expand Paged Branch' }));
+    expect(onLoadChildren).not.toHaveBeenCalled();
+    expect(screen.getByRole('treegrid', { name: 'Client breakdown by month' })).toHaveAttribute('aria-rowcount', '123');
+
+    const firstEmployee = screen.getByRole('button', { name: /Paged Employee 1, employee/ }).closest('tr');
+    expect(firstEmployee).toHaveAttribute('aria-setsize', '120');
+
+    const scrollContainer = screen.getByLabelText('Client breakdown table');
+    scrollContainer.scrollTop = 45 * 55;
+    fireEvent.scroll(scrollContainer);
+
+    expect(onLoadChildren).toHaveBeenCalledTimes(1);
+    const requestedBranch = onLoadChildren.mock.calls[0][0];
+    expect(requestedBranch.id).toBe('paged-branch');
+    expect(requestedBranch.employees).toHaveLength(50);
+    expect(requestedBranch.childrenLoaded).toBe(false);
+  });
+
   it('exposes hierarchy depth, sibling position, size, and expansion state to assistive technology', async () => {
     const user = userEvent.setup();
 

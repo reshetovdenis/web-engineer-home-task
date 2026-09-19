@@ -15,7 +15,13 @@ A dashboard based on the client data provided below, with two main parts:
 
 * Once a Period picker is added, users may select anything from a few days to several years. The dashboard should remain usable in these cases and allow the data to be displayed by day, month, or year. For this reason, I added a selector for grouping the data by day, month, or year.
 
-* The report endpoint preserves the supplied payload for the default period (February 2024 through January 2025, grouped by month) and projects values for other periods and groupings. The frontend converts that response to typed company, branch, employee, and channel nodes without changing the payload.
+* Report projection preserves the supplied values for the default period (February 2024 through January 2025, grouped by month) and projects values for other periods and groupings. Lazy API responses keep the same node IDs, names, and values while adding only hierarchy load-state metadata.
+
+* **Row-virtualization + lazy-pagination demo:** any selected period that extends outside the supplied February 2024–January 2025 data window uses generated report data and adds a deterministic `Scale demo — 2,000 employees` branch. Expand that branch to fetch the first 50 employees. As the virtual window approaches the loaded tail, the client requests the next page with `offset`/`limit` and appends it to the cached hierarchy. The DOM still contains only the viewport plus overscan. For a quick demo, select **Feb 1, 2025 – Mar 31, 2025** and watch `/api/report/children?...&offset=0&limit=50`, then `offset=50`, `offset=100`, and so on while scrolling.
+
+* The hierarchy is loaded incrementally for scalability. `/api/report` returns the first page of the root's immediate children. `/api/report/children` accepts `parentId`, `offset`, and `limit` (page size 50 in the UI) and returns only that direct-child slice plus `childCount`/`childrenLoaded` metadata. Pages are appended into the React Query cache, so expanding a large branch no longer hydrates its entire child list.
+
+* The hierarchy table vertically windows large visible row sets. Rows are fixed-height, so the table renders only the viewport plus an overscan buffer and uses spacer rows to preserve the native table layout, sticky headers, keyboard navigation, and treegrid row metadata. Small trees stay unwindowed to keep their DOM and accessibility behavior straightforward.
 
 I would extend the data model with fields such as the selected date range and a range type (`day | month | year`) so that the payload could represent the full state of the application.
 

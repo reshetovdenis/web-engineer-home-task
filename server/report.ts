@@ -44,17 +44,80 @@ function dailyValue(node: BusinessNode, date: Date): number {
   return Math.max(0, Math.round(previous + (current - previous) * progress + variation));
 }
 
+function projectedValues(node: BusinessNode, periods: Date[][], detail: ReportDetail): number[] {
+  return periods.map(dates => dates.reduce(
+    (sum, date) => sum + (detail === 'day' ? dailyValue(node, date) : monthlyValue(node, date)),
+    0,
+  ));
+}
+
 function projectNode(node: BusinessNode, periods: Date[][], detail: ReportDetail): BusinessNode {
   return {
     ...node,
-    values: periods.map(dates => dates.reduce((sum, date) => sum + (detail === 'day' ? dailyValue(node, date) : monthlyValue(node, date)), 0)),
+    values: projectedValues(node, periods, detail),
     ...(node.branches && { branches: node.branches.map(child => projectNode(child, periods, detail)) }),
     ...(node.employees && { employees: node.employees.map(child => projectNode(child, periods, detail)) }),
     ...(node.channels && { channels: node.channels.map(child => projectNode(child, periods, detail)) }),
   };
 }
 
-export function createReport(root: BusinessNode, fromValue: unknown, toValue: unknown, detail: unknown): BusinessNode {
+function sourceChildren(node: BusinessNode): BusinessNode[] {
+  return [
+    ...(node.branches ?? []),
+    ...(node.employees ?? []),
+    ...(node.channels ?? []),
+  ];
+}
+
+function projectLazyNode(node: BusinessNode, periods: Date[][], detail: ReportDetail, remainingDepth: number): BusinessNode {
+  const childCount = sourceChildren(node).length;
+  const hasChildren = childCount > 0;
+  const result: BusinessNode = {
+    id: node.id,
+    name: node.name,
+    values: projectedValues(node, periods, detail),
+    hasChildren,
+    childCount,
+    childrenLoaded: !hasChildren || remainingDepth > 0,
+  };
+
+  if (remainingDepth <= 0) return result;
+  const nextDepth = remainingDepth - 1;
+  if (node.branches) result.branches = node.branches.map(child => projectLazyNode(child, periods, detail, nextDepth));
+  if (node.employees) result.employees = node.employees.map(child => projectLazyNode(child, periods, detail, nextDepth));
+  if (node.channels) result.channels = node.channels.map(child => projectLazyNode(child, periods, detail, nextDepth));
+  return result;
+}
+
+
+function projectPagedNode(node: BusinessNode, periods: Date[][], detail: ReportDetail, offset: number, limit: number): BusinessNode {
+  const children = sourceChildren(node);
+  const childCount = children.length;
+  const page = children.slice(offset, offset + limit);
+  const result: BusinessNode = {
+    id: node.id,
+    name: node.name,
+    values: projectedValues(node, periods, detail),
+    hasChildren: childCount > 0,
+    childCount,
+    childrenLoaded: offset + page.length >= childCount,
+  };
+
+  if (!page.length) return result;
+
+  const branchIds = new Set((node.branches ?? []).map(child => child.id));
+  const employeeIds = new Set((node.employees ?? []).map(child => child.id));
+  const channelIds = new Set((node.channels ?? []).map(child => child.id));
+  const branches = page.filter(child => branchIds.has(child.id)).map(child => projectLazyNode(child, periods, detail, 0));
+  const employees = page.filter(child => employeeIds.has(child.id)).map(child => projectLazyNode(child, periods, detail, 0));
+  const channels = page.filter(child => channelIds.has(child.id)).map(child => projectLazyNode(child, periods, detail, 0));
+  if (branches.length) result.branches = branches;
+  if (employees.length) result.employees = employees;
+  if (channels.length) result.channels = channels;
+  return result;
+}
+
+function reportPeriods(fromValue: unknown, toValue: unknown, detail: unknown): { periods: Date[][]; detail: ReportDetail } {
   const from = parseDate(fromValue);
   const to = parseDate(toValue);
   if (detail !== 'year' && detail !== 'month' && detail !== 'day') throw new RangeError('Detail must be year, month, or day.');
@@ -84,5 +147,31 @@ export function createReport(root: BusinessNode, fromValue: unknown, toValue: un
     return Array.from({ length: date.getUTCMonth() - startMonth + 1 }, (_, offset) =>
       new Date(Date.UTC(date.getUTCFullYear(), startMonth + offset, 1)));
   });
+  return { periods, detail };
+}
+
+export function createReport(root: BusinessNode, fromValue: unknown, toValue: unknown, detailValue: unknown): BusinessNode {
+  const { periods, detail } = reportPeriods(fromValue, toValue, detailValue);
   return projectNode(root, periods, detail);
 }
+
+export function createLazyReport(root: BusinessNode, fromValue: unknown, toValue: unknown, detailValue: unknown, depth = 1): BusinessNode {
+  if (!Number.isInteger(depth) || depth < 0) throw new RangeError('Report depth must be a non-negative integer.');
+  const { periods, detail } = reportPeriods(fromValue, toValue, detailValue);
+  return projectLazyNode(root, periods, detail, depth);
+}
+
+export function createLazyReportPage(
+  root: BusinessNode,
+  fromValue: unknown,
+  toValue: unknown,
+  detailValue: unknown,
+  offset = 0,
+  limit = 50,
+): BusinessNode {
+  if (!Number.isInteger(offset) || offset < 0) throw new RangeError('Child offset must be a non-negative integer.');
+  if (!Number.isInteger(limit) || limit < 1 || limit > 100) throw new RangeError('Child page size must be between 1 and 100.');
+  const { periods, detail } = reportPeriods(fromValue, toValue, detailValue);
+  return projectPagedNode(root, periods, detail, offset, limit);
+}
+

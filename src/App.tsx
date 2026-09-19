@@ -3,8 +3,8 @@ import { Chart } from './Chart';
 import { HierarchyTable } from './HierarchyTable';
 import { ReportControls } from './ReportControls';
 import { childrenOf, type BusinessNode } from './viewModel';
-import { allowsDayDetail, detailForRange, fullReportRange, reportLabels, type ReportDetail, type ReportRange } from './reportPeriod';
-import { useReport } from './useReport';
+import { allowsDayDetail, detailForRange, fullReportRange, reportLabels, usesGeneratedReportData, type ReportDetail, type ReportRange } from './reportPeriod';
+import { useLoadReportChildren, useReport } from './useReport';
 
 function findNode(root: BusinessNode, id: string): BusinessNode | undefined {
   if (root.id === id) return root;
@@ -19,6 +19,7 @@ export default function App() {
   const [range, setRange] = useState<ReportRange>(fullReportRange);
   const [detail, setDetail] = useState<ReportDetail>('month');
   const report = useReport(range, detail);
+  const loadChildren = useLoadReportChildren(range, detail);
 
   function changeDetail(next: ReportDetail) {
     if (next === 'day' && !allowsDayDetail(range)) return;
@@ -46,7 +47,17 @@ export default function App() {
         const selected = selectedId ? findNode(root, selectedId) ?? root : root;
         return <>
           <Chart node={selected} labels={labels} detail={detail} />
-          <HierarchyTable root={root} selectedId={selected.id} onSelect={node => setSelectedId(node.id)} labels={labels} detail={detail} />
+          <HierarchyTable
+            root={root}
+            selectedId={selected.id}
+            onSelect={node => {
+              setSelectedId(node.id);
+              void loadChildren(node).catch(() => undefined);
+            }}
+            onLoadChildren={loadChildren}
+            labels={labels}
+            detail={detail}
+          />
         </>;
       })()}
     </div>

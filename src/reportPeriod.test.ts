@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { allowsDayDetail, detailForRange, fullReportRange, reportLabels } from './reportPeriod';
+import { allowsDayDetail, detailForRange, fullReportRange, reportLabels, usesGeneratedReportData } from './reportPeriod';
 
 describe('report periods', () => {
   it('allows daily detail through the one-year anniversary', () => {
@@ -14,6 +14,12 @@ describe('report periods', () => {
     expect(detailForRange({ from: new Date(2024, 1, 1), to: new Date(2024, 2, 3) })).toBe('month');
     expect(detailForRange(fullReportRange)).toBe('month');
     expect(detailForRange({ from: new Date(2024, 1, 15), to: new Date(2025, 1, 15) })).toBe('year');
+  });
+
+  it('marks periods outside the supplied source window as generated data', () => {
+    expect(usesGeneratedReportData(fullReportRange)).toBe(false);
+    expect(usesGeneratedReportData({ from: new Date(2025, 1, 1), to: new Date(2025, 2, 31) })).toBe(true);
+    expect(usesGeneratedReportData({ from: new Date(2024, 0, 1), to: new Date(2024, 0, 31) })).toBe(true);
   });
 
   it('labels the default report to match the source observations', () => {

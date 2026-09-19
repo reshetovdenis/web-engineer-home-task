@@ -4,9 +4,19 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import rawCompany from '../data/company.json';
-import { createReport } from '../server/report.ts';
+import { createLazyReport, createReport } from '../server/report.ts';
+import type { BusinessNode } from './data';
 
 const company = rawCompany;
+
+
+function findRawNode(node: BusinessNode, id: string): BusinessNode | undefined {
+  if (node.id === id) return node;
+  for (const child of [...(node.branches ?? []), ...(node.employees ?? []), ...(node.channels ?? [])]) {
+    const result = findRawNode(child, id);
+    if (result) return result;
+  }
+}
 
 function renderApp(queryClient = new QueryClient()) {
   return render(<QueryClientProvider client={queryClient}><App /></QueryClientProvider>);
@@ -94,6 +104,39 @@ describe('App request states', () => {
         name: /stacked monthly client chart/i,
       })
     ).toBeInTheDocument();
+  });
+
+
+  it('loads deeper hierarchy levels only when rows are expanded', async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.fn(async (input: string) => {
+      const url = new URL(String(input), 'http://localhost');
+      const params = url.searchParams;
+      if (url.pathname === '/api/report/children') {
+        const node = findRawNode(company, params.get('parentId')!);
+        if (!node) return { ok: false, status: 404 };
+        return {
+          ok: true,
+          json: async () => createLazyReport(node, params.get('from')!, params.get('to')!, params.get('detail')!, 1),
+        };
+      }
+      return {
+        ok: true,
+        json: async () => createLazyReport(company, params.get('from')!, params.get('to')!, params.get('detail')!, 1),
+      };
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    renderApp();
+    await screen.findByRole('img', { name: /stacked monthly client chart/i });
+
+    expect(screen.queryByRole('button', { name: /Anna Blackwood, employee/ })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Expand Branch 1' }));
+    expect(await screen.findByRole('button', { name: /Anna Blackwood, employee/ })).toBeInTheDocument();
+    expect(fetchMock.mock.calls.some(([url]) => String(url).includes('/api/report/children?') && String(url).includes(encodeURIComponent(company.branches![0].id)))).toBe(true);
+
+    await user.click(screen.getByRole('button', { name: 'Expand Anna Blackwood' }));
+    expect(await screen.findByRole('button', { name: /Existing clients, channel/ })).toBeInTheDocument();
+    expect(fetchMock.mock.calls.filter(([url]) => String(url).includes('/api/report/children?'))).toHaveLength(2);
   });
 
   it('loads the default report and reuses fresh cached data when mounted again', async () => {
