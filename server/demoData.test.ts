@@ -17,6 +17,8 @@ describe('scale demo report data', () => {
     expect(scaleBranch?.employees?.[0].name).toBe('Scale Employee 0001');
     expect(scaleBranch?.employees?.at(-1)?.name).toBe('Scale Employee 2000');
     expect(scaleBranch?.values).toHaveLength(12);
+    expect(augmented.values).toEqual(augmented.values.map((_, period) =>
+      augmented.branches!.reduce((sum, branch) => sum + branch.values[period], 0)));
   });
 
   it('also enables the scale branch for generated periods before the source window', () => {

@@ -30,8 +30,12 @@ const scaleEmployees: BusinessNode[] = Array.from({ length: scaleDemoEmployeeCou
   values: employeeValues(index),
 }));
 
-const scaleBranchValues = Array.from({ length: 12 }, (_, month) =>
-  scaleEmployees.reduce((sum, employee) => sum + employee.values[month], 0));
+function aggregateValues(children: BusinessNode[], periodCount: number): number[] {
+  return Array.from({ length: periodCount }, (_, period) =>
+    children.reduce((sum, child) => sum + (child.values[period] ?? 0), 0));
+}
+
+const scaleBranchValues = aggregateValues(scaleEmployees, 12);
 
 const scaleBranch: BusinessNode = {
   id: scaleDemoBranchId,
@@ -49,8 +53,10 @@ const scaleBranch: BusinessNode = {
  */
 export function companyForReportRange(root: BusinessNode, fromValue: unknown, toValue: unknown): BusinessNode {
   if (!usesGeneratedPeriod(fromValue, toValue)) return root;
+  const branches = [...(root.branches ?? []), scaleBranch];
   return {
     ...root,
-    branches: [...(root.branches ?? []), scaleBranch],
+    values: aggregateValues(branches, root.values.length),
+    branches,
   };
 }
