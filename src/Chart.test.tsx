@@ -11,19 +11,22 @@ const defaultLabels = reportLabels(fullReportRange, 'month');
 describe('chart data mapping', () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it('maps the supplied new-client channels and preserves reported totals', () => {
+  it('maps only the channels supplied on the selected node', () => {
     vi.stubGlobal('innerWidth', 1440);
-    const series = chartSeries(company);
+    const anna = company.branches[0].employees![0];
+    const series = chartSeries(anna);
     expect(series.map(item => item.name)).toEqual(['Existing clients', 'New organic', 'New paid']);
-    expect(series[1].values).toEqual(company.branches[0].employees![0].channels![1].values);
-    expect(series[2].values).toEqual(company.branches[0].employees![0].channels![2].values);
-    defaultLabels.forEach((_, index) => expect(series.reduce((sum, item) => sum + item.values[index], 0)).toBe(company.values[index]));
+    expect(series.map(item => item.values)).toEqual(anna.channels!.map(channel => channel.values));
+    // The source's May total and channel sum differ; neither value is inferred from the other.
+    expect(anna.values[3]).toBe(31);
+    expect(series.reduce((sum, item) => sum + item.values[3], 0)).toBe(30);
+
     const { container } = render(<Chart node={company} labels={defaultLabels} />);
     expect(screen.getByRole('img', { name: /stacked monthly client chart for company/i })).toBeInTheDocument();
-    const existingBars = container.querySelectorAll('path[name="Existing clients"]');
-    expect(existingBars).toHaveLength(12);
-    expect(existingBars[0]).toHaveAttribute('fill', 'var(--chart-existing-clients)');
-    expect(existingBars[0].getAttribute('d')?.match(/A 4,4/g)).toHaveLength(4);
+    const totalBars = container.querySelectorAll('path[name="Clients"]');
+    expect(totalBars).toHaveLength(12);
+    expect(totalBars[0]).toHaveAttribute('fill', 'var(--chart-total-clients)');
+    expect(totalBars[0].getAttribute('d')?.match(/A 4,4/g)).toHaveLength(4);
     const gridLines = container.querySelectorAll('.recharts-cartesian-grid-horizontal line');
     expect(gridLines.length).toBeGreaterThan(0);
     for (const line of gridLines) {
@@ -31,9 +34,9 @@ describe('chart data mapping', () => {
       expect(line).toHaveAttribute('stroke-width', '1');
       expect(line).toHaveAttribute('stroke-dasharray', '1 6');
     }
-    expect(Number(existingBars[0].getAttribute('x'))).toBeCloseTo(66, 0);
-    expect(Number(existingBars[0].getAttribute('width'))).toBeCloseTo(88, 0);
-    expect(existingBars[0]).toHaveAttribute('height', '200');
+    expect(Number(totalBars[0].getAttribute('x'))).toBeCloseTo(66, 0);
+    expect(Number(totalBars[0].getAttribute('width'))).toBeCloseTo(88, 0);
+    expect(totalBars[0]).toHaveAttribute('height', '200');
     const labels = container.querySelectorAll('text[orientation="bottom"]');
     expect(labels).toHaveLength(12);
     expect(labels[0]).not.toHaveAttribute('transform');
@@ -41,12 +44,22 @@ describe('chart data mapping', () => {
     expect(Number.parseFloat(legend?.style.top ?? '0') - Number(labels[0].getAttribute('y'))).toBe(28);
   });
 
-  it('places an unattributed leaf value in the existing-clients series', () => {
+  it('shows a total for nodes without channels and a single series for channel rows', () => {
     const leaf = company.branches[1];
-    const series = chartSeries(leaf);
-    expect(series[0].values).toEqual(leaf.values);
-    expect(series[1].values).toEqual(Array(12).fill(0));
-    expect(series[2].values).toEqual(Array(12).fill(0));
+    expect(chartSeries(company).map(series => series.name)).toEqual(['Clients']);
+    expect(chartSeries(company.branches[0]).map(series => series.name)).toEqual(['Clients']);
+    expect(chartSeries(leaf)).toEqual([{
+      id: 'total', name: 'Clients', values: leaf.values, color: 'var(--chart-total-clients)',
+    }]);
+    const organic = company.branches[0].employees![0].channels![1];
+    expect(chartSeries(organic).map(series => series.name)).toEqual(['New organic']);
+
+    const { container, rerender } = render(<Chart node={leaf} labels={defaultLabels} />);
+    expect(container.querySelectorAll('path[name="Clients"]')).toHaveLength(12);
+    expect(container.querySelectorAll('path[name="Existing clients"], path[name="New organic"], path[name="New paid"]')).toHaveLength(0);
+    rerender(<Chart node={organic} labels={defaultLabels} />);
+    expect(container.querySelectorAll('path[name="New organic"]')).toHaveLength(organic.values.filter(value => value > 0).length);
+    expect(container.querySelectorAll('path[name="Clients"]')).toHaveLength(0);
   });
 
   it('rounds only the outer edges of each stacked bar', () => {
@@ -104,7 +117,7 @@ describe('chart data mapping', () => {
     expect(labels[0]).toHaveTextContent('Jan 1');
     expect(labels[30]).toHaveTextContent('Jan 31');
     expect(Number(labels[30].getAttribute('x'))).toBeLessThanOrEqual(296);
-    expect([...container.querySelectorAll('path[name="Existing clients"]')]
+    expect([...container.querySelectorAll('path[name="Clients"]')]
       .every(bar => Number(bar.getAttribute('x')) + Number(bar.getAttribute('width')) <= 296)).toBe(true);
   });
 
@@ -123,7 +136,7 @@ describe('chart data mapping', () => {
     act(() => resize?.([{ contentRect: { width: 351, height: 430 } } as ResizeObserverEntry], {} as ResizeObserver));
 
     expect(container.querySelector('.recharts-wrapper > svg.recharts-surface')).toHaveAttribute('width', '351');
-    const bars = [...container.querySelectorAll('path[name="Existing clients"]')];
+    const bars = [...container.querySelectorAll('path[name="Clients"]')];
     expect(bars).toHaveLength(12);
     expect(bars.every(bar => Number(bar.getAttribute('x')) + Number(bar.getAttribute('width')) <= 351)).toBe(true);
     const labels = container.querySelectorAll('text[orientation="bottom"]');

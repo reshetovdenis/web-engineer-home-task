@@ -37,9 +37,7 @@ export function Chart({ node, labels, detail = 'month' }: Props) {
   const ceiling = ticks.at(-1)!;
   const data = labels.map((month, index) => ({
     month,
-    existing: series[0].values[index],
-    organic: series[1].values[index],
-    paid: series[2].values[index],
+    ...Object.fromEntries(series.map(part => [part.id, part.values[index]])),
   }));
 
   return <section className="min-w-0 max-w-full overflow-hidden rounded-lg bg-white" aria-label={`${detail === 'year' ? 'Yearly' : detail === 'day' ? 'Daily' : 'Monthly'} clients for ${node.name}`}>

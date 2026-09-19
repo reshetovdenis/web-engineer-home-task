@@ -229,7 +229,7 @@ describe('App request states', () => {
     expect(screen.getByRole('button', { name: /Period: Jan 15, 2024 – Jan 15, 2025/ })).toBeInTheDocument();
     await user.selectOptions(screen.getByRole('combobox', { name: 'Detail' }), 'day');
     expect(await screen.findByRole('img', { name: /stacked daily client chart/i })).toBeInTheDocument();
-    const bars = container.querySelectorAll('path[name="Existing clients"]');
+    const bars = container.querySelectorAll('path[name="Clients"]');
     expect(bars).toHaveLength(367);
     expect(Number(bars[0].getAttribute('width'))).toBeLessThan(4);
     expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument();

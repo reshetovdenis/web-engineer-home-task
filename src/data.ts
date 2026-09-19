@@ -45,21 +45,22 @@ export interface ChartSeries {
   color: string;
 }
 
-function channelValues(node: BusinessNode, name: string): number[] {
-  if (node.name === name && !childrenOf(node).length) return node.values;
-  const childValues = childrenOf(node).map(child => channelValues(child, name));
-  return node.values.map((_, month) => childValues.reduce((sum, values) => sum + values[month], 0));
-}
+const channelSeries = [
+  { name: 'Existing clients', id: 'existing', color: 'var(--chart-existing-clients)' },
+  { name: 'New organic', id: 'organic', color: 'var(--chart-new-organic)' },
+  { name: 'New paid', id: 'paid', color: 'var(--chart-new-paid)' },
+];
 
 export function chartSeries(node: BusinessNode): ChartSeries[] {
-  const organic = channelValues(node, 'New organic');
-  const paid = channelValues(node, 'New paid');
-  const existing = node.values.map((value, month) => value - organic[month] - paid[month]);
-  return [
-    { id: 'existing', name: 'Existing clients', values: existing, color: 'var(--chart-existing-clients)' },
-    { id: 'organic', name: 'New organic', values: organic, color: 'var(--chart-new-organic)' },
-    { id: 'paid', name: 'New paid', values: paid, color: 'var(--chart-new-paid)' },
-  ];
+  if (node.channels?.length) return node.channels.flatMap(channel => {
+    const definition = channelSeries.find(series => series.name === channel.name);
+    return definition ? [{ ...definition, values: channel.values }] : [];
+  });
+
+  const channel = channelSeries.find(series => series.name === node.name);
+  if (channel && !childrenOf(node).length) return [{ ...channel, values: node.values }];
+
+  return [{ id: 'total', name: 'Clients', values: node.values, color: 'var(--chart-total-clients)' }];
 }
 
 export function hasDifferences(node: BusinessNode): boolean {
