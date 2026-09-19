@@ -1,12 +1,13 @@
 import { act, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Chart } from './Chart';
-import { chartSeries } from './data';
-import company from '../data/company.json';
+import { chartSeries, toBusinessNode } from './viewModel';
+import rawCompany from '../data/company.json';
 import { createReport } from '../server/report.ts';
 import { fullReportRange, reportLabels } from './reportPeriod';
 
 const defaultLabels = reportLabels(fullReportRange, 'month');
+const company = toBusinessNode(rawCompany);
 
 describe('chart data mapping', () => {
   afterEach(() => vi.unstubAllGlobals());
@@ -78,6 +79,22 @@ describe('chart data mapping', () => {
     expect(corners(paid[2])).toBe(2); // Top of the April stack.
   });
 
+  it('keeps paid above organic after selecting a paid channel and then its employee', () => {
+    vi.stubGlobal('innerWidth', 1440);
+    const anna = company.branches[0].employees[0];
+    const paid = anna.channels[2];
+    const { container, rerender } = render(<Chart node={paid} labels={defaultLabels} />);
+    rerender(<Chart node={anna} labels={defaultLabels} />);
+
+    const segmentAtApril = (name: string) => [...container.querySelectorAll(`path[name="${name}"]`)]
+      .find(path => Number(path.getAttribute('x')) > 250 && Number(path.getAttribute('x')) < 350);
+    const existingY = Number(segmentAtApril('Existing clients')?.getAttribute('y'));
+    const organicY = Number(segmentAtApril('New organic')?.getAttribute('y'));
+    const paidY = Number(segmentAtApril('New paid')?.getAttribute('y'));
+    expect(paidY).toBeLessThan(organicY);
+    expect(organicY).toBeLessThan(existingY);
+  });
+
   it('updates Y axis levels for the selected row, including small and zero values', () => {
     vi.stubGlobal('innerWidth', 1440);
     const anna = company.branches[0].employees![0];
@@ -108,7 +125,7 @@ describe('chart data mapping', () => {
 
   it('shows every date label on a 31-day chart page', () => {
     vi.stubGlobal('innerWidth', 320);
-    const report = createReport(company, '2025-01-01', '2025-01-31', 'day');
+    const report = toBusinessNode(createReport(rawCompany, '2025-01-01', '2025-01-31', 'day'));
     const reportDayLabels = reportLabels({ from: new Date(2025, 0, 1), to: new Date(2025, 0, 31) }, 'day');
     const { container } = render(<Chart node={report} labels={reportDayLabels} detail="day" />);
     expect(container.querySelector('.recharts-wrapper > svg.recharts-surface')).toHaveAttribute('width', '296');

@@ -15,9 +15,7 @@ A dashboard based on the client data provided below, with two main parts:
 
 * Once a Period picker is added, users may select anything from a few days to several years. The dashboard should remain usable in these cases and allow the data to be displayed by day, month, or year. For this reason, I added a selector for grouping the data by day, month, or year.
 
-* Implementing these features required modifying how the API serves the payload. The report endpoint serves the same payload as the one provided in the take-home assignment for the default period (February 2024 through January 2025, grouped by month). It serves projected values in the same data model for other periods and groupings.
-
-  I did not modify the payload data model itself, since it was not clear whether doing so was allowed.
+* The report endpoint preserves the supplied payload for the default period (February 2024 through January 2025, grouped by month) and projects values for other periods and groupings. The frontend converts that response to typed company, branch, employee, and channel nodes without changing the payload.
 
 I would extend the data model with fields such as the selected date range and a range type (`day | month | year`) so that the payload could represent the full state of the application.
 

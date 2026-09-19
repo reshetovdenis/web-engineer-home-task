@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { childrenOf, kindOf, visibleNodes, type BusinessNode } from './data';
+import { childrenOf, visibleNodes, type BusinessNode } from './viewModel';
 
 interface Props {
   root: BusinessNode;
@@ -100,7 +100,7 @@ export function HierarchyTable({ root, selectedId, onSelect, labels, detail = 'm
           const children = childrenOf(row.node);
           const isExpanded = expanded.has(row.node.id);
           const isSelected = selectedId === row.node.id;
-          const kind = kindOf(row.level);
+          const kind = row.node.type;
           return <tr className="group" key={row.node.id} aria-level={row.level + 1} aria-posinset={row.position} aria-setsize={row.siblingCount} aria-expanded={children.length ? isExpanded : undefined}>
             <th className="sticky left-0 z-10 h-[55px] w-[280px] border-b border-ink/8 bg-white p-0 text-left font-normal whitespace-nowrap group-hover:bg-ink/4 max-[1440px]:static max-[601px]:w-[250px] max-[421px]:w-[calc(100%_-_92px)]" scope="row"><div className="flex h-[55px] items-center gap-2 pr-2 ps-[calc(var(--level)*28px+16px)] max-[1440px]:min-w-0 max-[601px]:ps-[calc(var(--level)*14px+12px)]" style={{ '--level': row.level } as React.CSSProperties}>
               {children.length ? <button ref={element => { if (element) buttons.current.set(row.node.id, element); else buttons.current.delete(row.node.id); }} className="grid h-5 w-4 flex-none cursor-pointer place-items-center border-0 bg-transparent p-0 text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#795bd6]" type="button" aria-expanded={isExpanded} aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${row.node.name}`} onClick={() => toggle(row.node.id)} onKeyDown={event => onRowKeyDown(event, index)}><span className={`size-[6px] border-r-[1.5px] border-b-[1.5px] border-current transition-transform duration-150 ${isExpanded ? 'rotate-45' : '-rotate-45'}`} aria-hidden="true" /></button> : <span className="w-4 flex-none" aria-hidden="true" />}

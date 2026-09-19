@@ -3,9 +3,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
-import company from '../data/company.json';
-import type { BusinessNode } from './data';
+import rawCompany from '../data/company.json';
 import { createReport } from '../server/report.ts';
+
+const company = rawCompany;
 
 function renderApp(queryClient = new QueryClient()) {
   return render(<QueryClientProvider client={queryClient}><App /></QueryClientProvider>);
@@ -116,21 +117,7 @@ describe('App request states', () => {
 
   it('loads year and day reports from the report endpoint', async () => {
     const user = userEvent.setup();
-    function project(node: BusinessNode, groups: number[][]): BusinessNode {
-      return {
-        ...node,
-        values: groups.map(indexes => indexes.reduce((sum, index) => sum + node.values[index], 0)),
-        ...(node.branches && { branches: node.branches.map(child => project(child, groups)) }),
-        ...(node.employees && { employees: node.employees.map(child => project(child, groups)) }),
-        ...(node.channels && { channels: node.channels.map(child => project(child, groups)) }),
-      };
-    }
-    const fetchMock = vi.fn(async (input: string) => {
-      const detail = new URL(input, 'http://localhost').searchParams.get('detail');
-      if (detail === 'month') return { ok: true, json: async () => company };
-      const groups = detail === 'year' ? [Array.from({ length: 11 }, (_, index) => index), [11]] : Array.from({ length: 31 }, () => [11]);
-      return { ok: true, json: async () => project(company, groups) };
-    });
+    const fetchMock = vi.fn(async (input: string) => reportResponse(input));
     vi.stubGlobal('fetch', fetchMock);
     renderApp();
     await screen.findByRole('img', { name: /stacked monthly client chart/i });

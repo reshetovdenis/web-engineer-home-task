@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Legend, Rectangle, ResponsiveContainer, XAxis, YAxis, type BarShapeProps } from 'recharts';
-import { chartSeries, type BusinessNode } from './data';
+import { chartSeries, type BusinessNode } from './viewModel';
 
 interface Props { node: BusinessNode; labels: string[]; detail?: 'year' | 'month' | 'day' }
 
@@ -43,7 +43,7 @@ export function Chart({ node, labels, detail = 'month' }: Props) {
   return <section className="min-w-0 max-w-full overflow-hidden rounded-lg bg-white" aria-label={`${detail === 'year' ? 'Yearly' : detail === 'day' ? 'Daily' : 'Monthly'} clients for ${node.name}`}>
     <div className="block h-[430px] w-full min-w-0 [&_.recharts-cartesian-axis-tick-value]:fill-ink/60 [&_.recharts-cartesian-axis-tick-value]:font-sans [&_.recharts-cartesian-axis-tick-value]:font-normal [&_.recharts-cartesian-axis-tick-value]:tabular-nums [&_.recharts-default-legend]:font-sans [&_.recharts-default-legend]:text-xs [&_.recharts-default-legend]:font-normal [&_.recharts-legend-item-text]:text-ink/60!" role="img" aria-label={`Stacked ${detail === 'year' ? 'yearly' : detail === 'day' ? 'daily' : 'monthly'} client chart for ${node.name}`}>
       <ResponsiveContainer width="100%" height={430} initialDimension={{ width: chartWidth, height: 430 }} onResize={setChartWidth}>
-        <BarChart data={data} maxBarSize={88} barCategoryGap="10%"
+        <BarChart key={node.id} data={data} maxBarSize={88} barCategoryGap="10%"
           margin={{ top: 34, right: 16, bottom: 32, left: 0 }} accessibilityLayer={false}>
           <CartesianGrid vertical={false} stroke="var(--chart-grid-line)" strokeWidth={1} strokeDasharray="1 6" />
           <XAxis dataKey="month" axisLine={false} tickLine={false} height={xAxisHeight}

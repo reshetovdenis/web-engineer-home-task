@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Chart } from './Chart';
 import { HierarchyTable } from './HierarchyTable';
 import { ReportControls } from './ReportControls';
-import { childrenOf, type BusinessNode } from './data';
+import { childrenOf, type BusinessNode } from './viewModel';
 import { allowsDayDetail, detailForRange, fullReportRange, reportLabels, type ReportDetail, type ReportRange } from './reportPeriod';
 import { useReport } from './useReport';
 

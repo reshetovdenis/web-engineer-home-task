@@ -15,11 +15,13 @@ import {
 } from 'vitest';
 
 import { HierarchyTable } from './HierarchyTable';
-import company from '../data/company.json';
+import rawCompany from '../data/company.json';
+import { toBusinessNode } from './viewModel';
 import { createReport } from '../server/report.ts';
 import { fullReportRange, reportLabels } from './reportPeriod';
 
 const defaultLabels = reportLabels(fullReportRange, 'month');
+const company = toBusinessNode(rawCompany);
 
 afterEach(() => {
   cleanup();
@@ -88,7 +90,7 @@ describe('HierarchyTable', () => {
   it('makes the last displayed day the last table column when a month has more dates', async () => {
     const user = userEvent.setup();
     vi.stubGlobal('innerWidth', 1440);
-    const report = createReport(company, '2024-02-01', '2024-02-29', 'day');
+    const report = toBusinessNode(createReport(rawCompany, '2024-02-01', '2024-02-29', 'day'));
     const labels = reportLabels({ from: new Date(2024, 1, 1), to: new Date(2024, 1, 29) }, 'day');
     const { container } = render(<HierarchyTable root={report} labels={labels} detail="day" selectedId={company.id} onSelect={vi.fn()} />);
 
