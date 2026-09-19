@@ -11,11 +11,24 @@ export function reportQueryKey(range: ReportRange, detail: ReportDetail) {
   return ['report', dateKey(range.from), dateKey(range.to), detail] as const;
 }
 
-function parsePayload(payload: unknown): ReportNode {
-  if (!payload || typeof payload !== 'object' || !('id' in payload) || !('values' in payload) || !Array.isArray(payload.values)) {
-    throw new Error('The server returned an invalid report.');
+function isReportNode(payload: unknown): payload is ReportNode {
+  if (!payload || typeof payload !== 'object') return false;
+  const node = payload as Record<string, unknown>;
+  if (typeof node.id !== 'string' || !node.id || typeof node.name !== 'string') return false;
+  if (!Array.isArray(node.values) || !node.values.every(value => typeof value === 'number' && Number.isFinite(value) && value >= 0)) return false;
+  if (node.hasChildren !== undefined && typeof node.hasChildren !== 'boolean') return false;
+  if (node.childrenLoaded !== undefined && typeof node.childrenLoaded !== 'boolean') return false;
+  if (node.childCount !== undefined && (typeof node.childCount !== 'number' || !Number.isInteger(node.childCount) || node.childCount < 0)) return false;
+  for (const key of ['branches', 'employees', 'channels'] as const) {
+    const children = node[key];
+    if (children !== undefined && (!Array.isArray(children) || !children.every(isReportNode))) return false;
   }
-  return payload as ReportNode;
+  return true;
+}
+
+function parsePayload(payload: unknown): ReportNode {
+  if (!isReportNode(payload)) throw new Error('The server returned an invalid report.');
+  return payload;
 }
 
 export function useReport(range: ReportRange, detail: ReportDetail) {

@@ -155,12 +155,6 @@ export function createReport(root: BusinessNode, fromValue: unknown, toValue: un
   return projectNode(root, periods, detail);
 }
 
-export function createLazyReport(root: BusinessNode, fromValue: unknown, toValue: unknown, detailValue: unknown, depth = 1): BusinessNode {
-  if (!Number.isInteger(depth) || depth < 0) throw new RangeError('Report depth must be a non-negative integer.');
-  const { periods, detail } = reportPeriods(fromValue, toValue, detailValue);
-  return projectLazyNode(root, periods, detail, depth);
-}
-
 export function createLazyReportPage(
   root: BusinessNode,
   fromValue: unknown,

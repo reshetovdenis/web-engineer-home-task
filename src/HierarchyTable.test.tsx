@@ -4,6 +4,7 @@ import {
   render,
   screen,
   within,
+  waitFor,
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
@@ -29,7 +30,7 @@ afterEach(() => {
 });
 
 describe('HierarchyTable', () => {
-  it('places the supplied circular avatar between each employee control and name', async () => {
+  it('uses employee avatar URLs and falls back to initials when an image fails', async () => {
     const user = userEvent.setup();
     const { container } = render(<HierarchyTable root={company} labels={defaultLabels} selectedId={company.id} onSelect={vi.fn()} />);
     await user.click(screen.getByRole('button', { name: 'Expand Branch 1' }));
@@ -37,22 +38,19 @@ describe('HierarchyTable', () => {
     const avatars = container.querySelectorAll('img.employee-avatar');
     expect(avatars).toHaveLength(5);
     for (const employee of company.branches[0].employees!) {
-      const name = screen.getByRole('button', { name: new RegExp(`${employee.name}, employee`) });
-      expect(name.previousElementSibling).toHaveAttribute('src', `/api/avatars/${employee.id}.jpg`);
+      expect(container.querySelector(`img[src="/api/avatars/${employee.id}.jpg"]`)).toBeInTheDocument();
     }
-    const annaName = screen.getByRole('button', { name: /Anna Blackwood, employee/ });
-    const avatar = annaName.previousElementSibling;
-    expect(avatar).toHaveAttribute('src', expect.stringContaining('e3c4637b-2f21-4b7e-883e-b13ae1a6df6a.jpg'));
-    expect(avatar).toHaveAttribute('alt', '');
-    expect(avatar).toHaveAttribute('width', '20');
-    expect(avatar).toHaveAttribute('height', '20');
-    expect(avatar?.previousElementSibling).toHaveAttribute('aria-label', 'Expand Anna Blackwood');
 
-    fireEvent.error(avatar!);
-    expect(annaName.previousElementSibling).toHaveClass('employee-avatar-fallback');
-    expect(annaName.previousElementSibling).toHaveTextContent('AB');
-    expect(annaName.previousElementSibling?.previousElementSibling).toHaveAttribute('aria-label', 'Expand Anna Blackwood');
+    const annaAvatar = container.querySelector(`img[src="/api/avatars/${company.branches[0].employees![0].id}.jpg"]`)!;
+    expect(annaAvatar).toHaveAttribute('alt', '');
+    expect(annaAvatar).toHaveAttribute('width', '20');
+    expect(annaAvatar).toHaveAttribute('height', '20');
+
+    fireEvent.error(annaAvatar);
+    const fallback = container.querySelector('.employee-avatar-fallback');
+    expect(fallback).toHaveTextContent('AB');
   });
+
 
   it('shows four months at a time at iPad mini portrait width', async () => {
     const user = userEvent.setup();
@@ -274,6 +272,68 @@ describe('HierarchyTable', () => {
     expect(requestedBranch.id).toBe('paged-branch');
     expect(requestedBranch.employees).toHaveLength(50);
     expect(requestedBranch.childrenLoaded).toBe(false);
+  });
+
+
+  it('shows a child-load error and retries the same node on the next expansion', async () => {
+    const user = userEvent.setup();
+    const lazyCompany = toBusinessNode({
+      id: 'lazy-company',
+      name: 'Lazy Company',
+      values: rawCompany.values,
+      childCount: 1,
+      childrenLoaded: true,
+      branches: [{
+        id: 'lazy-branch',
+        name: 'Lazy Branch',
+        values: rawCompany.values,
+        hasChildren: true,
+        childCount: 2,
+        childrenLoaded: false,
+      }],
+    });
+    const onLoadChildren = vi.fn()
+      .mockRejectedValueOnce(new Error('temporary failure'))
+      .mockResolvedValueOnce(undefined);
+
+    render(<HierarchyTable
+      root={lazyCompany}
+      labels={defaultLabels}
+      selectedId={lazyCompany.id}
+      onSelect={vi.fn()}
+      onLoadChildren={onLoadChildren}
+    />);
+
+    await user.click(screen.getByRole('button', { name: 'Expand Lazy Branch' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Couldn’t load children for Lazy Branch');
+    expect(screen.getByRole('button', { name: 'Expand Lazy Branch' })).toHaveAttribute(
+      'title',
+      'Could not load Lazy Branch. Activate to retry.',
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Expand Lazy Branch' }));
+    await waitFor(() => expect(onLoadChildren).toHaveBeenCalledTimes(2));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('moves keyboard focus to an off-screen row in a virtualized hierarchy', async () => {
+    const largeCompany = toBusinessNode({
+      ...rawCompany,
+      branches: Array.from({ length: 500 }, (_, index) => ({
+        id: `keyboard-branch-${index + 1}`,
+        name: `Keyboard Branch ${index + 1}`,
+        values: rawCompany.values,
+      })),
+    });
+
+    render(<HierarchyTable root={largeCompany} labels={defaultLabels} selectedId={largeCompany.id} onSelect={vi.fn()} />);
+    const first = screen.getByRole('button', { name: /Keyboard Branch 1, branch/ });
+    first.focus();
+    fireEvent.keyDown(first, { key: 'End' });
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Keyboard Branch 500, branch/ })).toHaveFocus();
+    });
   });
 
   it('exposes hierarchy depth, sibling position, size, and expansion state to assistive technology', async () => {

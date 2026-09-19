@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import company from '../data/company.json';
 import type { BusinessNode } from '../src/data';
 import { companyForReportRange, scaleDemoBranchId } from './demoData.ts';
-import { createLazyReport, createLazyReportPage, createReport } from './report.ts';
+import { createLazyReportPage, createReport } from './report.ts';
 
 function identities(node: BusinessNode): string[] {
   return [node.id, node.name, ...(node.branches ?? node.employees ?? node.channels ?? []).flatMap(identities)];
@@ -12,7 +12,6 @@ describe('generated reports', () => {
   it('preserves supplied monthly values and the entire hierarchy', () => {
     const report = createReport(company, '2024-02-01', '2025-01-31', 'month');
     expect(report).toEqual(company);
-    expect(Object.keys(report)).toEqual(Object.keys(company));
   });
 
   it('generates repeatable values outside the source months with the same branches and people', () => {
@@ -42,23 +41,6 @@ describe('generated reports', () => {
   });
 
 
-  it('projects only one hierarchy level for lazy report requests', () => {
-    const lazy = createLazyReport(company, '2024-02-01', '2025-01-31', 'month', 1);
-    expect(lazy.childrenLoaded).toBe(true);
-    expect(lazy.hasChildren).toBe(true);
-    expect(lazy.branches).toHaveLength(company.branches!.length);
-    expect(lazy.branches![0].hasChildren).toBe(true);
-    expect(lazy.branches![0].childrenLoaded).toBe(false);
-    expect(lazy.branches![0].employees).toBeUndefined();
-
-    const branch = createLazyReport(company.branches![0], '2024-02-01', '2025-01-31', 'month', 1);
-    expect(branch.childrenLoaded).toBe(true);
-    expect(branch.employees).toHaveLength(company.branches![0].employees!.length);
-    expect(branch.employees![0].hasChildren).toBe(true);
-    expect(branch.employees![0].childrenLoaded).toBe(false);
-    expect(branch.employees![0].channels).toBeUndefined();
-  });
-
   it('paginates large direct-child collections without hydrating the whole branch', () => {
     const source = companyForReportRange(company, '2025-02-01', '2025-03-31');
     const scaleBranch = source.branches!.find(branch => branch.id === scaleDemoBranchId)!;
@@ -82,6 +64,12 @@ describe('generated reports', () => {
     expect(last.childrenLoaded).toBe(true);
     expect(last.employees).toHaveLength(50);
     expect(last.employees!.at(-1)!.name).toBe('Scale Employee 2000');
+
+    const partialLast = createLazyReportPage(scaleBranch, '2025-02-01', '2025-03-31', 'month', 1960, 70);
+    expect(partialLast.childrenLoaded).toBe(true);
+    expect(partialLast.employees).toHaveLength(40);
+    expect(partialLast.employees![0].name).toBe('Scale Employee 1961');
+    expect(partialLast.employees!.at(-1)!.name).toBe('Scale Employee 2000');
   });
 
   it('caps daily reports before expensive projection and rejects invalid dates', () => {

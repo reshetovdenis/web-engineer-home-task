@@ -1,10 +1,10 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import rawCompany from '../data/company.json';
-import { createLazyReport, createReport } from '../server/report.ts';
+import { createLazyReportPage, createReport } from '../server/report.ts';
 import type { BusinessNode } from './data';
 
 const company = rawCompany;
@@ -107,7 +107,7 @@ describe('App request states', () => {
   });
 
 
-  it('loads deeper hierarchy levels only when rows are expanded', async () => {
+  it('uses the paginated child contract and hydrates a selected employee for the chart', async () => {
     const user = userEvent.setup();
     const fetchMock = vi.fn(async (input: string) => {
       const url = new URL(String(input), 'http://localhost');
@@ -117,27 +117,55 @@ describe('App request states', () => {
         if (!node) return { ok: false, status: 404 };
         return {
           ok: true,
-          json: async () => createLazyReport(node, params.get('from')!, params.get('to')!, params.get('detail')!, 1),
+          json: async () => createLazyReportPage(
+            node,
+            params.get('from')!,
+            params.get('to')!,
+            params.get('detail')!,
+            Number(params.get('offset')),
+            Number(params.get('limit')),
+          ),
         };
       }
       return {
         ok: true,
-        json: async () => createLazyReport(company, params.get('from')!, params.get('to')!, params.get('detail')!, 1),
+        json: async () => createLazyReportPage(
+          company,
+          params.get('from')!,
+          params.get('to')!,
+          params.get('detail')!,
+          0,
+          50,
+        ),
       };
     });
     vi.stubGlobal('fetch', fetchMock);
-    renderApp();
+    const { container } = renderApp();
     await screen.findByRole('img', { name: /stacked monthly client chart/i });
 
     expect(screen.queryByRole('button', { name: /Anna Blackwood, employee/ })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Expand Branch 1' }));
-    expect(await screen.findByRole('button', { name: /Anna Blackwood, employee/ })).toBeInTheDocument();
-    expect(fetchMock.mock.calls.some(([url]) => String(url).includes('/api/report/children?') && String(url).includes(encodeURIComponent(company.branches![0].id)))).toBe(true);
+    const anna = await screen.findByRole('button', { name: /Anna Blackwood, employee/ });
+
+    const childRequests = () => fetchMock.mock.calls
+      .map(([url]) => new URL(String(url), 'http://localhost'))
+      .filter(url => url.pathname === '/api/report/children');
+    expect(childRequests()).toHaveLength(1);
+    expect(childRequests()[0].searchParams.get('parentId')).toBe(company.branches![0].id);
+    expect(childRequests()[0].searchParams.get('offset')).toBe('0');
+    expect(childRequests()[0].searchParams.get('limit')).toBe('50');
+
+    await user.click(anna);
+    await screen.findByRole('img', { name: /stacked monthly client chart for Anna Blackwood/i });
+    await waitFor(() => expect(container.querySelectorAll('path[name="Existing clients"]')).not.toHaveLength(0));
+    expect(childRequests()).toHaveLength(2);
+    expect(childRequests()[1].searchParams.get('parentId')).toBe(company.branches![0].employees![0].id);
 
     await user.click(screen.getByRole('button', { name: 'Expand Anna Blackwood' }));
     expect(await screen.findByRole('button', { name: /Existing clients, channel/ })).toBeInTheDocument();
-    expect(fetchMock.mock.calls.filter(([url]) => String(url).includes('/api/report/children?'))).toHaveLength(2);
+    expect(childRequests()).toHaveLength(2);
   });
+
 
   it('loads the default report and reuses fresh cached data when mounted again', async () => {
     const fetchMock = vi.fn().mockResolvedValue({

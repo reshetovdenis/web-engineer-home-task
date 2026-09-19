@@ -33,7 +33,9 @@ export function Chart({ node, labels, detail = 'month' }: Props) {
   const xTickFontSize = detail === 'day' && labels.length > 24 && labels.length <= 31 && verticalLabels
     ? Math.max(7, Math.min(12, Math.floor(categoryWidth))) : 12;
   const series = chartSeries(node);
-  const ticks = yAxisTicks(node.values);
+  const displayedTotals = labels.map((_, index) =>
+    series.reduce((sum, part) => sum + (part.values[index] ?? 0), 0));
+  const ticks = yAxisTicks(displayedTotals);
   const ceiling = ticks.at(-1)!;
   const formatAxisValue = (value: number) => value.toLocaleString();
   const data = labels.map((month, index) => ({

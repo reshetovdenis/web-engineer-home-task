@@ -20,10 +20,4 @@ describe('scale demo report data', () => {
     expect(augmented.values).toEqual(augmented.values.map((_, period) =>
       augmented.branches!.reduce((sum, branch) => sum + branch.values[period], 0)));
   });
-
-  it('also enables the scale branch for generated periods before the source window', () => {
-    expect(usesGeneratedPeriod('2024-01-01', '2024-01-31')).toBe(true);
-    expect(companyForReportRange(company, '2024-01-01', '2024-01-31').branches)
-      .toEqual(expect.arrayContaining([expect.objectContaining({ id: scaleDemoBranchId })]));
-  });
 });

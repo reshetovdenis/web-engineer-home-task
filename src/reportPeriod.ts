@@ -7,10 +7,6 @@ export const firstSelectableDay = new Date(2020, 0, 1);
 export const lastSelectableDay = new Date(2030, 11, 31);
 export const fullReportRange: ReportRange = { from: firstReportDay, to: lastReportDay };
 
-export function usesGeneratedReportData(range: ReportRange): boolean {
-  return range.from < firstReportDay || range.to > lastReportDay;
-}
-
 export function allowsDayDetail(range: ReportRange): boolean {
   const anniversary = Date.UTC(range.from.getFullYear() + 1, range.from.getMonth(), range.from.getDate());
   const end = Date.UTC(range.to.getFullYear(), range.to.getMonth(), range.to.getDate());
