@@ -35,6 +35,7 @@ export function Chart({ node, labels, detail = 'month' }: Props) {
   const series = chartSeries(node);
   const ticks = yAxisTicks(node.values);
   const ceiling = ticks.at(-1)!;
+  const formatAxisValue = (value: number) => value.toLocaleString();
   const data = labels.map((month, index) => ({
     month,
     ...Object.fromEntries(series.map(part => [part.id, part.values[index]])),
@@ -44,14 +45,14 @@ export function Chart({ node, labels, detail = 'month' }: Props) {
     <div className="block h-[430px] w-full min-w-0 [&_.recharts-cartesian-axis-tick-value]:fill-ink/60 [&_.recharts-cartesian-axis-tick-value]:font-sans [&_.recharts-cartesian-axis-tick-value]:font-normal [&_.recharts-cartesian-axis-tick-value]:tabular-nums [&_.recharts-default-legend]:font-sans [&_.recharts-default-legend]:text-xs [&_.recharts-default-legend]:font-normal [&_.recharts-legend-item-text]:text-ink/60!" role="img" aria-label={`Stacked ${detail === 'year' ? 'yearly' : detail === 'day' ? 'daily' : 'monthly'} client chart for ${node.name}`}>
       <ResponsiveContainer width="100%" height={430} initialDimension={{ width: chartWidth, height: 430 }} onResize={setChartWidth}>
         <BarChart key={node.id} data={data} maxBarSize={88} barCategoryGap="10%"
-          margin={{ top: 34, right: 16, bottom: 32, left: 0 }} accessibilityLayer={false}>
+          margin={{ top: 34, right: 16, bottom: 32, left: 16 }} accessibilityLayer={false}>
           <CartesianGrid vertical={false} stroke="var(--chart-grid-line)" strokeWidth={1} strokeDasharray="1 6" />
           <XAxis dataKey="month" axisLine={false} tickLine={false} height={xAxisHeight}
             angle={verticalLabels ? -90 : 0} textAnchor={verticalLabels ? 'end' : 'middle'}
             tickMargin={verticalLabels ? 8 : 10} fontSize={xTickFontSize} ticks={labels}
             interval={tickInterval} tickFormatter={month => detail === 'month' ? month.replace(' ', ' 20') : month} />
-          <YAxis width={54} axisLine={false} tickLine={false} tickMargin={12} fontSize={12}
-            domain={[0, ceiling]} ticks={ticks} />
+          <YAxis width={"auto"} axisLine={false} tickLine={false} tickMargin={12} fontSize={12}
+            domain={[0, ceiling]} ticks={ticks} tickFormatter={formatAxisValue} />
           <Legend position="bottom" iconType="rect" iconSize={8} />
           {series.map((part, partIndex) => <Bar key={part.id} dataKey={part.id} name={part.name}
             stackId="clients" fill={part.color} isAnimationActive={false}
