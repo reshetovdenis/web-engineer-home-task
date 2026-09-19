@@ -26,7 +26,7 @@ It would also be useful to add an `avatar` field to each employee so that the av
 ## Next things TODO
 
 * Add authentication and authorization for displaying the data and retrieving it from the API.
-* Add pagination.
+* Add a tooltip that displays the number of clients in each category when the user hovers over a bar in the chart.
 
 ## Example
 
