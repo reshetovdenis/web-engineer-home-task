@@ -14,8 +14,8 @@ describe('scale demo report data', () => {
     const scaleBranch = augmented.branches?.find(branch => branch.id === scaleDemoBranchId);
 
     expect(scaleBranch?.employees).toHaveLength(scaleDemoEmployeeCount);
-    expect(scaleBranch?.employees?.[0].name).toBe('Scale Employee 0001');
-    expect(scaleBranch?.employees?.at(-1)?.name).toBe('Scale Employee 2000');
+    expect(scaleBranch?.employees?.[0].name).toBe('Employee 0001');
+    expect(scaleBranch?.employees?.at(-1)?.name).toBe('Employee 2000');
     expect(scaleBranch?.values).toHaveLength(12);
     expect(augmented.values).toEqual(augmented.values.map((_, period) =>
       augmented.branches!.reduce((sum, branch) => sum + branch.values[period], 0)));

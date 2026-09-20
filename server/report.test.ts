@@ -49,27 +49,27 @@ describe('generated reports', () => {
     expect(first.childCount).toBe(2000);
     expect(first.childrenLoaded).toBe(false);
     expect(first.employees).toHaveLength(50);
-    expect(first.employees![0].name).toBe('Scale Employee 0001');
-    expect(first.employees!.at(-1)!.name).toBe('Scale Employee 0050');
+    expect(first.employees![0].name).toBe('Employee 0001');
+    expect(first.employees!.at(-1)!.name).toBe('Employee 0050');
     expect(first.employees![0].employees).toBeUndefined();
 
     const second = createLazyReportPage(scaleBranch, '2025-02-01', '2025-03-31', 'month', 50, 50);
     expect(second.childCount).toBe(2000);
     expect(second.childrenLoaded).toBe(false);
     expect(second.employees).toHaveLength(50);
-    expect(second.employees![0].name).toBe('Scale Employee 0051');
-    expect(second.employees!.at(-1)!.name).toBe('Scale Employee 0100');
+    expect(second.employees![0].name).toBe('Employee 0051');
+    expect(second.employees!.at(-1)!.name).toBe('Employee 0100');
 
     const last = createLazyReportPage(scaleBranch, '2025-02-01', '2025-03-31', 'month', 1950, 50);
     expect(last.childrenLoaded).toBe(true);
     expect(last.employees).toHaveLength(50);
-    expect(last.employees!.at(-1)!.name).toBe('Scale Employee 2000');
+    expect(last.employees!.at(-1)!.name).toBe('Employee 2000');
 
     const partialLast = createLazyReportPage(scaleBranch, '2025-02-01', '2025-03-31', 'month', 1960, 70);
     expect(partialLast.childrenLoaded).toBe(true);
     expect(partialLast.employees).toHaveLength(40);
-    expect(partialLast.employees![0].name).toBe('Scale Employee 1961');
-    expect(partialLast.employees!.at(-1)!.name).toBe('Scale Employee 2000');
+    expect(partialLast.employees![0].name).toBe('Employee 1961');
+    expect(partialLast.employees!.at(-1)!.name).toBe('Employee 2000');
   });
 
   it('caps daily reports before expensive projection and rejects invalid dates', () => {

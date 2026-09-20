@@ -26,7 +26,7 @@ function employeeValues(index: number): number[] {
 
 const scaleEmployees: BusinessNode[] = Array.from({ length: scaleDemoEmployeeCount }, (_, index) => ({
   id: `scale-demo-employee-${String(index + 1).padStart(4, '0')}`,
-  name: `Scale Employee ${String(index + 1).padStart(4, '0')}`,
+  name: `Employee ${String(index + 1).padStart(4, '0')}`,
   values: employeeValues(index),
 }));
 
@@ -39,7 +39,7 @@ const scaleBranchValues = aggregateValues(scaleEmployees, 12);
 
 const scaleBranch: BusinessNode = {
   id: scaleDemoBranchId,
-  name: `Scale demo — ${scaleDemoEmployeeCount.toLocaleString('en-US')} employees`,
+  name: `Demo — ${scaleDemoEmployeeCount.toLocaleString('en-US')} employees`,
   values: scaleBranchValues,
   employees: scaleEmployees,
 };
