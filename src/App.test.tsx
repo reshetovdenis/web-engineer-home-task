@@ -65,11 +65,10 @@ describe('App request states', () => {
 
     renderApp();
 
-    expect(
-      await screen.findByRole('alert')
-    ).toHaveTextContent(
-      'Couldn’t load client data: The server returned 500.'
-    );
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Couldn’t load client data');
+    expect(alert).toHaveTextContent('The server returned 500.');
+    expect(alert).toHaveClass('fixed', 'inset-0');
 
     expect(
       screen.getByRole('button', { name: 'Try again' })
@@ -164,6 +163,56 @@ describe('App request states', () => {
     await user.click(screen.getByRole('button', { name: 'Expand Anna Blackwood' }));
     expect(await screen.findByRole('button', { name: /Existing clients, channel/ })).toBeInTheDocument();
     expect(childRequests()).toHaveLength(2);
+  });
+
+
+  it('shows an error when loading children for a selected node fails', async () => {
+    const user = userEvent.setup();
+    const employeeId = company.branches![0].employees![0].id;
+    const fetchMock = vi.fn(async (input: string) => {
+      const url = new URL(String(input), 'http://localhost');
+      const params = url.searchParams;
+      if (url.pathname === '/api/report/children') {
+        if (params.get('parentId') === employeeId) throw new TypeError('Failed to fetch');
+        const node = findRawNode(company, params.get('parentId')!);
+        if (!node) return { ok: false, status: 404 };
+        return {
+          ok: true,
+          json: async () => createLazyReportPage(
+            node,
+            params.get('from')!,
+            params.get('to')!,
+            params.get('detail')!,
+            Number(params.get('offset')),
+            Number(params.get('limit')),
+          ),
+        };
+      }
+      return {
+        ok: true,
+        json: async () => createLazyReportPage(
+          company,
+          params.get('from')!,
+          params.get('to')!,
+          params.get('detail')!,
+          0,
+          50,
+        ),
+      };
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    renderApp();
+    await screen.findByRole('img', { name: /stacked monthly client chart/i });
+
+    await user.click(screen.getByRole('button', { name: 'Expand Branch 1' }));
+    const anna = await screen.findByRole('button', { name: /Anna Blackwood, employee/ });
+    await user.click(anna);
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Couldn’t load children for Anna Blackwood');
+    expect(alert).toHaveTextContent('Failed to fetch');
+    expect(alert).toHaveClass('fixed', 'inset-0');
+    expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
   });
 
 

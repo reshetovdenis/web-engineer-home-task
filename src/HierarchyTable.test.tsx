@@ -305,13 +305,17 @@ describe('HierarchyTable', () => {
     />);
 
     await user.click(screen.getByRole('button', { name: 'Expand Lazy Branch' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('Couldn’t load children for Lazy Branch');
+    const loadAlert = await screen.findByRole('alert');
+    expect(loadAlert).toHaveTextContent('Couldn’t load children for Lazy Branch');
+    expect(loadAlert).toHaveClass('fixed', 'inset-0');
+    expect(loadAlert).toHaveTextContent('temporary failure');
+    expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Expand Lazy Branch' })).toHaveAttribute(
       'title',
       'Could not load Lazy Branch. Activate to retry.',
     );
 
-    await user.click(screen.getByRole('button', { name: 'Expand Lazy Branch' }));
+    await user.click(screen.getByRole('button', { name: 'Try again' }));
     await waitFor(() => expect(onLoadChildren).toHaveBeenCalledTimes(2));
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });

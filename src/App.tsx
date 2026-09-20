@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Chart } from './Chart';
+import { ErrorOverlay } from './ErrorOverlay';
 import { HierarchyTable } from './HierarchyTable';
 import { ReportControls } from './ReportControls';
 import { childrenOf, type BusinessNode } from './viewModel';
@@ -21,17 +22,28 @@ export default function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [range, setRange] = useState<ReportRange>(fullReportRange);
   const [detail, setDetail] = useState<ReportDetail>('month');
+  const [childLoadError, setChildLoadError] = useState<{ nodeId: string; nodeName: string; message: string } | null>(null);
   const report = useReport(range, detail);
   const loadChildren = useLoadReportChildren(range, detail);
 
   function changeDetail(next: ReportDetail) {
     if (next === 'day' && !allowsDayDetail(range)) return;
+    setChildLoadError(null);
     setDetail(next);
   }
 
   function changeRange(next: ReportRange) {
+    setChildLoadError(null);
     setRange(next);
     setDetail(detailForRange(next));
+  }
+
+  function loadSelectedChildren(node: BusinessNode) {
+    setChildLoadError(null);
+    void loadChildren(node).catch(error => {
+      const message = error instanceof Error ? error.message : 'Unknown error.';
+      setChildLoadError({ nodeId: node.id, nodeName: node.name, message });
+    });
   }
 
   const statusClass = 'min-h-[100px] min-w-0 max-w-full overflow-hidden rounded-lg bg-white p-6 text-sm';
@@ -43,19 +55,28 @@ export default function App() {
         <ReportControls range={range} onRangeChange={changeRange} detail={detail} onDetailChange={changeDetail} />
       </header>
       {report.isPending && <div className={statusClass} role="status">Loading client data…</div>}
-      {report.isError && <div className={statusClass} role="alert"><p className="mb-[14px]">Couldn’t load client data: {report.error.message}</p><button className="cursor-pointer rounded border border-ink bg-white px-3 py-[7px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#795bd6]" type="button" onClick={() => void report.refetch()}>Try again</button></div>}
+      {report.isError && <ErrorOverlay
+        title="Couldn’t load client data"
+        message={report.error.message}
+        onRetry={() => void report.refetch()}
+      />}
       {report.isSuccess && (() => {
         const labels = reportLabels(range, detail);
         const root = report.data;
         const selected = selectedId ? findNode(root, selectedId) ?? root : root;
         return <>
           <Chart node={selected} labels={labels} detail={detail} />
+          {childLoadError?.nodeId === selected.id && <ErrorOverlay
+            title={`Couldn’t load children for ${childLoadError.nodeName}`}
+            message={childLoadError.message}
+            onRetry={() => loadSelectedChildren(selected)}
+          />}
           <HierarchyTable
             root={root}
             selectedId={selected.id}
             onSelect={node => {
               setSelectedId(node.id);
-              void loadChildren(node).catch(() => undefined);
+              loadSelectedChildren(node);
             }}
             onLoadChildren={loadChildren}
             labels={labels}

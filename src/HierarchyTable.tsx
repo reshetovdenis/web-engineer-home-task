@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ErrorOverlay } from './ErrorOverlay';
 import { childrenOf, visibleNodes, type BusinessNode } from './viewModel';
 
 interface Props {
@@ -39,10 +40,6 @@ function EmployeeAvatar({ id, name }: { id: string; name: string }) {
     loading="lazy" decoding="async" onError={() => setFailed(true)} />;
 }
 
-function compactCount(value: number) {
-  return new Intl.NumberFormat(undefined, { notation: 'compact', maximumFractionDigits: 1 }).format(value);
-}
-
 export function HierarchyTable({ root, selectedId, onSelect, onLoadChildren, labels, detail = 'month' }: Props) {
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set([root.id]));
   const [selectedMonth, setSelectedMonth] = useState(0);
@@ -50,7 +47,7 @@ export function HierarchyTable({ root, selectedId, onSelect, onLoadChildren, lab
   const [scrollTop, setScrollTop] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(MAX_TABLE_HEIGHT);
   const [loadingIds, setLoadingIds] = useState<Set<string>>(() => new Set());
-  const [loadErrors, setLoadErrors] = useState<Set<string>>(() => new Set());
+  const [loadErrors, setLoadErrors] = useState<Map<string, string>>(() => new Map());
   const panel = useRef<HTMLElement>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const buttons = useRef(new Map<string, HTMLButtonElement>());
@@ -78,12 +75,14 @@ export function HierarchyTable({ root, selectedId, onSelect, onLoadChildren, lab
   }, 0);
   const topSpacer = isVirtualized ? startIndex * ROW_HEIGHT : 0;
   const bottomSpacer = isVirtualized ? Math.max(0, (rows.length - endIndex) * ROW_HEIGHT) : 0;
+  const activeLoadError = loadErrors.entries().next().value as [string, string] | undefined;
+  const failedNode = activeLoadError ? rows.find(row => row.node.id === activeLoadError[0])?.node : undefined;
 
   useEffect(() => {
     requestedOffsets.current.clear();
     loadsInFlight.current.clear();
     setLoadingIds(new Set());
-    setLoadErrors(new Set());
+    setLoadErrors(new Map());
   }, [root.values]);
 
   useEffect(() => {
@@ -120,15 +119,16 @@ export function HierarchyTable({ root, selectedId, onSelect, onLoadChildren, lab
     loadsInFlight.current.add(node.id);
     setLoadingIds(previous => new Set(previous).add(node.id));
     setLoadErrors(previous => {
-      const next = new Set(previous);
+      const next = new Map(previous);
       next.delete(node.id);
       return next;
     });
     try {
       await onLoadChildren(node);
-    } catch {
+    } catch (error) {
       requestedOffsets.current.delete(node.id);
-      setLoadErrors(previous => new Set(previous).add(node.id));
+      const message = error instanceof Error ? error.message : 'Unknown error.';
+      setLoadErrors(previous => new Map(previous).set(node.id, message));
       if (loadedCount === 0) setExpanded(previous => {
         const next = new Set(previous);
         next.delete(node.id);
@@ -180,7 +180,7 @@ export function HierarchyTable({ root, selectedId, onSelect, onLoadChildren, lab
     });
     if (!expanded.has(node.id) && loadErrors.has(node.id)) {
       setLoadErrors(previous => {
-        const next = new Set(previous);
+        const next = new Map(previous);
         next.delete(node.id);
         return next;
       });
@@ -237,7 +237,13 @@ export function HierarchyTable({ root, selectedId, onSelect, onLoadChildren, lab
     event.preventDefault();
   }
 
-  return <section ref={panel} className="min-w-0 max-w-full overflow-hidden rounded-lg bg-white" aria-label="Client breakdown" style={{ '--visible-months': monthCount } as React.CSSProperties}>
+  return <>
+    {activeLoadError && failedNode && <ErrorOverlay
+      title={`Couldn’t load children for ${failedNode.name}`}
+      message={activeLoadError[1]}
+      onRetry={() => void loadNode(failedNode)}
+    />}
+    <section ref={panel} className="min-w-0 max-w-full overflow-hidden rounded-lg bg-white" aria-label="Client breakdown" style={{ '--visible-months': monthCount } as React.CSSProperties}>
     {monthCount < labels.length && <div className="flex items-center justify-between gap-3 px-4 pt-4 text-sm">
       <label htmlFor="table-month">{detail === 'year' ? 'Years' : detail === 'day' ? 'Days' : 'Months'}</label>
       <select className="h-10 min-w-0 max-w-full rounded border border-ink/20 bg-white px-3 font-[inherit] text-ink" id="table-month" value={firstMonth} onChange={event => setSelectedMonth(Number(event.target.value))}>
@@ -258,20 +264,14 @@ export function HierarchyTable({ root, selectedId, onSelect, onLoadChildren, lab
             const isExpanded = expanded.has(row.node.id);
             const isSelected = selectedId === row.node.id;
             const isLoading = loadingIds.has(row.node.id);
-            const loadedChildCount = childrenOf(row.node).length;
-            const loadFailed = loadErrors.has(row.node.id);
+            const loadError = loadErrors.get(row.node.id);
+            const loadFailed = loadError !== undefined;
             const kind = row.node.type;
             return <tr className="group" key={row.node.id} data-row-index={index} aria-rowindex={row.logicalIndex + 2} aria-level={row.level + 1} aria-posinset={row.position} aria-setsize={row.siblingCount} aria-expanded={hasChildren ? isExpanded : undefined}>
               <th className="sticky left-0 z-10 h-[55px] w-[280px] border-b border-ink/8 bg-white p-0 text-left font-normal whitespace-nowrap group-hover:bg-ink/4 max-[1440px]:left-auto max-[601px]:w-[250px] max-[421px]:w-[calc(100%_-_92px)]" scope="row"><div className="flex h-[55px] min-w-0 items-center gap-2 overflow-hidden pr-2 ps-[calc(var(--level)*28px+16px)] max-[601px]:ps-[calc(var(--level)*14px+12px)]" style={{ '--level': row.level } as React.CSSProperties}>
                 {hasChildren ? <button ref={element => { if (element) buttons.current.set(row.node.id, element); else buttons.current.delete(row.node.id); }} className="grid h-5 w-4 flex-none cursor-pointer place-items-center border-0 bg-transparent p-0 text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#795bd6]" type="button" aria-expanded={isExpanded} aria-busy={isLoading || undefined} aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${row.node.name}`} title={loadFailed ? `Could not load ${row.node.name}. Activate to retry.` : undefined} onClick={() => toggle(row.node)} onKeyDown={event => onRowKeyDown(event, index)}><span className={`size-[6px] border-r-[1.5px] border-b-[1.5px] border-current transition-transform duration-150 ${isExpanded ? 'rotate-45' : '-rotate-45'}`} aria-hidden="true" /></button> : <span className="w-4 flex-none" aria-hidden="true" />}
                 {kind === 'employee' && <EmployeeAvatar id={row.node.id} name={row.node.name} />}
                 <button ref={element => { if (!hasChildren) { if (element) buttons.current.set(row.node.id, element); else buttons.current.delete(row.node.id); } }} type="button" className="min-w-0 flex-1 cursor-pointer overflow-hidden border-0 bg-transparent p-0 text-left font-normal whitespace-nowrap text-ellipsis text-ink hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#795bd6]" title={row.node.name} aria-current={isSelected ? 'true' : undefined} aria-label={`${row.node.name}, ${kind}, level ${row.level + 1}${row.parentId ? ', child row' : ''}; show in chart`} onClick={() => onSelect(row.node)} onKeyDown={event => onRowKeyDown(event, index)}>{row.node.name}</button>
-                {isExpanded && hasChildren && !row.node.childrenLoaded && <>
-                  <span className="ml-auto flex-none text-xs text-ink/45 max-[601px]:hidden" aria-hidden="true">{isLoading ? 'Loading…' : `${loadedChildCount.toLocaleString()} / ${row.node.childCount.toLocaleString()} loaded`}</span>
-                  <span className="ml-auto hidden flex-none text-xs text-ink/45 max-[601px]:inline" aria-hidden="true">{isLoading ? 'Loading…' : `${compactCount(loadedChildCount)} / ${compactCount(row.node.childCount)}`}</span>
-                  <span className="sr-only">{isLoading ? `Loading children for ${row.node.name}` : `${loadedChildCount.toLocaleString()} of ${row.node.childCount.toLocaleString()} children loaded`}</span>
-                </>}
-                {loadFailed && <span className="sr-only" role="alert">Couldn’t load children for {row.node.name}. Activate expand to retry.</span>}
               </div></th>
               {row.node.values.slice(firstMonth, firstMonth + monthCount).map((value, month) => <td key={firstMonth + month} className="month-column month-current h-[55px] w-[92px] border-b border-ink/8 bg-white p-0 pl-4 text-right text-ink group-hover:bg-ink/4 last:w-[116px] last:pr-6 max-[1440px]:w-[calc((100%_-_var(--label-width))/var(--visible-months))] max-[1440px]:pl-2 max-[1440px]:pr-4 max-[1440px]:last:w-[calc((100%_-_var(--label-width))/var(--visible-months))] max-[1440px]:last:pr-4">{value.toLocaleString()}</td>)}
             </tr>;
@@ -280,5 +280,6 @@ export function HierarchyTable({ root, selectedId, onSelect, onLoadChildren, lab
         </tbody>
       </table>
     </div>
-  </section>;
+    </section>
+  </>;
 }
