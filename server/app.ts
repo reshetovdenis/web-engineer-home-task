@@ -2,7 +2,7 @@ import express from 'express';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
-import type { BusinessNode } from '../src/data.js';
+import type { BusinessNode } from '../src/report/data.js';
 import { createLazyReportPage } from './report.ts';
 import { companyForReportRange } from './demoData.ts';
 

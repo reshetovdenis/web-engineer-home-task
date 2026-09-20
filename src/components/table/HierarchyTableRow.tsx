@@ -1,6 +1,6 @@
 import type { CSSProperties, KeyboardEvent } from 'react';
-import { EmployeeAvatar } from './EmployeeAvatar';
-import type { BusinessNode, VisibleNode } from './viewModel';
+import { EmployeeAvatar } from '../EmployeeAvatar';
+import type { BusinessNode, VisibleNode } from '../../report/viewModel';
 
 interface Props {
   row: VisibleNode;

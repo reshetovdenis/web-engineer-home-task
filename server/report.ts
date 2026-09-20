@@ -1,4 +1,4 @@
-import type { BusinessNode } from '../src/data.js';
+import type { BusinessNode } from '../src/report/data.js';
 
 const firstYear = 2020;
 const lastYear = 2030;

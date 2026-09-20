@@ -1,10 +1,10 @@
 import { useMemo, useState, type CSSProperties } from 'react';
-import { ErrorOverlay } from './ErrorOverlay';
+import { ErrorOverlay } from '../ErrorOverlay';
 import { HierarchyTableRow } from './HierarchyTableRow';
 import { useChildPageLoading } from './useChildPageLoading';
 import { useTableColumns } from './useTableColumns';
 import { useWindowedTreeRows } from './useWindowedTreeRows';
-import { visibleNodes, type BusinessNode } from './viewModel';
+import { visibleNodes, type BusinessNode } from '../../report/viewModel';
 
 interface Props {
   root: BusinessNode;

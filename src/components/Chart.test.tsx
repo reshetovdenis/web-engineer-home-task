@@ -1,10 +1,10 @@
 import { act, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Chart } from './Chart';
-import { chartSeries, toBusinessNode } from './viewModel';
-import rawCompany from '../data/company.json';
-import { createReport } from '../server/report.ts';
-import { fullReportRange, reportLabels } from './reportPeriod';
+import { chartSeries, toBusinessNode } from '../report/viewModel';
+import rawCompany from '../../data/company.json';
+import { createReport } from '../../server/report.ts';
+import { fullReportRange, reportLabels } from '../report/reportPeriod';
 
 const defaultLabels = reportLabels(fullReportRange, 'month');
 const company = toBusinessNode(rawCompany);

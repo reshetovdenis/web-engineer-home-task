@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import rawCompany from '../data/company.json';
 import { createLazyReportPage, createReport } from '../server/report.ts';
-import type { BusinessNode } from './data';
+import type { BusinessNode } from './report/data';
 
 const company = rawCompany;
 

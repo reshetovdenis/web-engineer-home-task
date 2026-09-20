@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
-import { childrenOf, type BusinessNode, type VisibleNode } from './viewModel';
+import { childrenOf, type BusinessNode, type VisibleNode } from '../../report/viewModel';
 
 const ROW_HEIGHT = 55;
 const HEADER_HEIGHT = 56;

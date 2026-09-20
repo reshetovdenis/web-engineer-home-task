@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Chart } from './Chart';
-import { ErrorOverlay } from './ErrorOverlay';
-import { HierarchyTable } from './HierarchyTable';
-import { ReportControls } from './ReportControls';
-import { Spinner } from './Spinner';
-import { childrenOf, type BusinessNode } from './viewModel';
-import { allowsDayDetail, detailForRange, fullReportRange, reportLabels, type ReportDetail, type ReportRange } from './reportPeriod';
-import { useLoadReportChildren, useReport } from './useReport';
+import { Chart } from './components/Chart';
+import { ErrorOverlay } from './components/ErrorOverlay';
+import { HierarchyTable } from './components/table/HierarchyTable';
+import { ReportControls } from './report/ReportControls';
+import { Spinner } from './components/Spinner';
+import { childrenOf, type BusinessNode } from './report/viewModel';
+import { allowsDayDetail, detailForRange, fullReportRange, reportLabels, type ReportDetail, type ReportRange } from './report/reportPeriod';
+import { useLoadReportChildren, useReport } from './report/useReport';
 
 
 // findNode is O(n), but the BusinessNode tree stays small because company

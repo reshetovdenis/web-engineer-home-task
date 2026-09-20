@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react';
-import { childrenOf, type BusinessNode, type VisibleNode } from './viewModel';
+import { childrenOf, type BusinessNode, type VisibleNode } from '../../report/viewModel';
 
 const PAGE_PREFETCH_ROWS = 10;
 

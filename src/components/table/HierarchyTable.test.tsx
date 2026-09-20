@@ -16,10 +16,10 @@ import {
 } from 'vitest';
 
 import { HierarchyTable } from './HierarchyTable';
-import rawCompany from '../data/company.json';
-import { toBusinessNode } from './viewModel';
-import { createReport } from '../server/report.ts';
-import { fullReportRange, reportLabels } from './reportPeriod';
+import rawCompany from '../../../data/company.json';
+import { toBusinessNode } from '../../report/viewModel';
+import { createReport } from '../../../server/report.ts';
+import { fullReportRange, reportLabels } from '../../report/reportPeriod';
 
 const defaultLabels = reportLabels(fullReportRange, 'month');
 const company = toBusinessNode(rawCompany);

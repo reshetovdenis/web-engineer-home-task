@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import company from '../data/company.json';
-import type { BusinessNode } from '../src/data';
+import type { BusinessNode } from '../src/report/data';
 import { companyForReportRange, scaleDemoBranchId } from './demoData.ts';
 import { createLazyReportPage, createReport } from './report.ts';
 

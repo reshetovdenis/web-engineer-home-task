@@ -1,4 +1,4 @@
-import type { BusinessNode } from '../src/data.js';
+import type { BusinessNode } from '../src/report/data.js';
 
 export const scaleDemoEmployeeCount = 2000;
 export const scaleDemoBranchId = 'scale-demo-branch';

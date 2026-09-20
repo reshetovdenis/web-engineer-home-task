@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import company from '../data/company.json';
+import company from '../../data/company.json';
 import type { BusinessNode } from './data';
 
 const validChannelNames = new Set(['Existing clients', 'New organic', 'New paid']);

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Legend, Rectangle, ResponsiveContainer, XAxis, YAxis, type BarShapeProps } from 'recharts';
-import { chartSeries, type BusinessNode } from './viewModel';
+import { chartSeries, type BusinessNode } from '../report/viewModel';
 
 interface Props { node: BusinessNode; labels: string[]; detail?: 'year' | 'month' | 'day' }
 
