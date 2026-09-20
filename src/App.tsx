@@ -7,9 +7,9 @@ import { childrenOf, type BusinessNode } from './viewModel';
 import { allowsDayDetail, detailForRange, fullReportRange, reportLabels, type ReportDetail, type ReportRange } from './reportPeriod';
 import { useLoadReportChildren, useReport } from './useReport';
 
-// findNode could look not efficient as performance is O(n). However we don't load
-// the full company data at once, so the tree of BusinessNodes is small and 
-// delays are not visible for users.
+
+// findNode is O(n), but the BusinessNode tree stays small because company
+// data is loaded incrementally, so the performance impact is negligible.
 function findNode(root: BusinessNode, id: string): BusinessNode | undefined {
   if (root.id === id) return root;
   for (const child of childrenOf(root)) {
