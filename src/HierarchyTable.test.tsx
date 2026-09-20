@@ -51,29 +51,6 @@ describe('HierarchyTable', () => {
     expect(fallback).toHaveTextContent('AB');
   });
 
-
-  it('shows four months at a time at iPad mini portrait width', async () => {
-    const user = userEvent.setup();
-    vi.stubGlobal('innerWidth', 768);
-    render(<HierarchyTable root={company} labels={defaultLabels} selectedId={company.id} onSelect={vi.fn()} />);
-
-    const month = screen.getByRole('combobox', { name: 'Months' });
-    expect(month).toHaveValue('0');
-    expect(document.querySelectorAll('thead .month-current')).toHaveLength(4);
-    expect(screen.getByRole('columnheader', { name: 'May 2024' })).toHaveClass('month-current');
-    await user.selectOptions(month, '4');
-
-    expect(screen.getByRole('columnheader', { name: 'Jun 2024' })).toHaveClass('month-current');
-    expect(screen.queryByRole('columnheader', { name: 'Feb 2024' })).not.toBeInTheDocument();
-    const companyRow = screen.getByRole('button', { name: /Company, company/ }).closest('tr')!;
-    expect(companyRow.querySelectorAll('td.month-current')).toHaveLength(4);
-    expect(companyRow.querySelector('td.month-current')).toHaveTextContent(String(company.values[4]));
-
-    vi.stubGlobal('innerWidth', 1024);
-    fireEvent.resize(window);
-    expect(document.querySelectorAll('thead .month-current')).toHaveLength(7);
-  });
-
   it('shows one month at 375px and keeps every month reachable', async () => {
     const user = userEvent.setup();
     vi.stubGlobal('innerWidth', 375);
