@@ -51,7 +51,7 @@ describe('App request states', () => {
 
     expect(
       screen.getByRole('status')
-    ).toHaveTextContent('Loading client data');
+    ).toHaveTextContent('Loading...');
   });
 
   it('shows an error when the API request fails', async () => {
