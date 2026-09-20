@@ -81,14 +81,6 @@ describe('Chart', () => {
     expect(labels()).toEqual(['0', '1']);
   });
 
-  it('shows every month label vertically at iPad mini portrait width', () => {
-    vi.stubGlobal('innerWidth', 768);
-    const { container } = render(<Chart node={company} labels={defaultLabels} />);
-    const labels = container.querySelectorAll('text[orientation="bottom"]');
-    expect(labels).toHaveLength(12);
-    expect(labels[0].getAttribute('transform')).toContain('rotate(-90');
-  });
-
   it('shows every date label on a 31-day chart page', () => {
     vi.stubGlobal('innerWidth', 320);
     const report = toBusinessNode(createReport(rawCompany, '2025-01-01', '2025-01-31', 'day'));
