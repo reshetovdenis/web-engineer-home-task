@@ -3,6 +3,7 @@ import { Chart } from './Chart';
 import { ErrorOverlay } from './ErrorOverlay';
 import { HierarchyTable } from './HierarchyTable';
 import { ReportControls } from './ReportControls';
+import { Spinner } from './Spinner';
 import { childrenOf, type BusinessNode } from './viewModel';
 import { allowsDayDetail, detailForRange, fullReportRange, reportLabels, type ReportDetail, type ReportRange } from './reportPeriod';
 import { useLoadReportChildren, useReport } from './useReport';
@@ -46,20 +47,13 @@ export default function App() {
     });
   }
 
-  const statusClass = 'fixed inset-0 z-50 flex items-center justify-center bg-transparent';
-
   return <main className="min-h-screen min-w-80 bg-paper px-4 pb-10 font-sans text-ink antialiased [font-synthesis:none] [text-rendering:optimizeLegibility] max-[601px]:px-3">
     <div className="mx-auto flex w-full max-w-[1408px] min-w-0 flex-col gap-4 pt-6 max-[601px]:pt-5">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-[35px]/[44px] font-normal max-[601px]:text-[30px]/[40px]">Clients</h1>
         <ReportControls range={range} onRangeChange={changeRange} detail={detail} onDetailChange={changeDetail} />
       </header>
-      {report.isPending && <div className={statusClass} role="status" aria-label="Loading">
-        <div className="flex flex-col items-center gap-3">
-          <span className="h-8 w-8 animate-spin rounded-full border-2 border-ink/15 border-t-ink" aria-hidden="true" />
-          <span className="text-sm text-ink/70">Loading...</span>
-        </div>
-      </div>}
+      {report.isPending && <Spinner />}
       {report.isError && <ErrorOverlay
         title="Couldn’t load client data"
         message={report.error.message}
