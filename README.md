@@ -7,7 +7,7 @@ A dashboard based on the client data provided below, with two main parts:
 
 ## Assumptions and things missing from the assignment
 
-* The example payload from the assignment is internally inconsistent. It should either omit values for nodes that have children, in which case we would recalculate their totals from the child nodes, or provide complete information, including the channel breakdown all the way up to the top-level node. The current design can lead to errors because some reported parent values do not equal the sum of their children. For example, this occurs for Company in May 2024. The table preserves every supplied value. The chart shows the selected row’s total unless that row includes a supplied channel breakdown; in that case, it shows the supplied channel values. For now, I assume that all levels should have channel breakdown numbers.
+* The example payload from the assignment has errors. Some reported parent values do not equal the sum of their children. For example, this occurs for Company in May 2024. Also every level should have a breakdown by channels.
 
 * The payload does not describe how employee avatars should be retrieved, so I assumed they are served from a folder on the server and matched by filename, using the employee ID.
 
